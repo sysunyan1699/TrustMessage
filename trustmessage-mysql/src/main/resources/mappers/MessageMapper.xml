@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.trustmessage.mysql.mapper.MessageMapper">
+
+    <!-- 插入操作 插入数据后获取自动生成的主键 -->
+    <insert id="insertMessage" parameterType="com.example.trustmessage.mysql.model.Message"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO message (
+            message,
+            message_key,
+            message_status,
+            verify_try_count,
+            verify_next_retry_time,
+            send_status,
+            send_try_count,
+            send_next_retry_time
+        ) VALUES (
+            #{message},
+            #{messageKey},
+            #{messageStatus},
+            #{verifyTryCount},
+            #{verifyNextRetryTime},
+            #{sendStatus},
+            #{sendTryCount},
+            #{sendNextRetryTime}
+        )
+    </insert>
+
+    <select id="findByMessageKey" resultType="com.example.trustmessage.mysql.model.Message" parameterType="map">
+        SELECT
+        id,
+        message AS message,
+        message_key AS "messageKey",
+        message_status AS "messageStatus",
+        verify_try_count AS "verifyTryCount",
+        verify_next_retry_time AS "verifyNextRetryTime",
+        send_status AS "sendStatus",
+        send_try_count AS "sendTryCount",
+        send_next_retry_time AS "sendNextRetryTime",
+        create_time AS "createTime",
+        update_time AS "updateTime"
+        FROM
+        message
+        WHERE
+        message_key = #{messageKey}
+    </select>
+
+
+    <update id="updateMessageStatusByMessageKey" parameterType="map">
+        UPDATE message
+        SET message_status = #{messageStatus}
+        WHERE message_key = #{messageKey} AND message_status = #{originalMessageStatus}
+    </update>
+
+
+    <update id="updateSendStatusByMessageKey" parameterType="map">
+        UPDATE message
+        SET send_status = #{sendStatus}
+        WHERE message_key = #{messageKey} AND send_status = #{originalSendStatus}
+    </update>
+
+
+    <update id="updateVerifyRetryCountAndTime" parameterType="map">
+        UPDATE message
+        SET verify_try_count = #{verifyTryCount}, verify_next_retry_time = #{verifyNextRetryTime}
+        WHERE message_key = #{messageKey}
+    </update>
+
+
+    <update id="updateSendRetryCountAndTime" parameterType="map">
+        UPDATE message
+        SET send_try_count = #{sendTryCount}, send_next_retry_time = #{sendNextRetryTime}
+        WHERE message_key = #{messageKey}
+    </update>
+
+
+    <select id="findMessagesForVerify" resultType="com.example.trustmessage.mysql.model.Message" parameterType="map">
+        SELECT
+        id,
+        message AS message,
+        message_key AS "messageKey",
+        message_status AS "messageStatus",
+        verify_try_count AS "verifyTryCount",
+        verify_next_retry_time AS "verifyNextRetryTime",
+        send_status AS "sendStatus",
+        send_try_count AS "sendTryCount",
+        send_next_retry_time AS "sendNextRetryTime",
+        create_time AS "createTime",
+        update_time AS "updateTime"
+        FROM
+        message
+        WHERE
+        id > #{id}
+        AND message_status = 1
+        AND CURRENT_TIMESTAMP >= verify_next_retry_time
+        LIMIT #{limitCount}
+    </select>
+
+    <select id="findMessagesForSend" resultType="com.example.trustmessage.mysql.model.Message" parameterType="map">
+        SELECT
+        id,
+        message AS message,
+        message_key AS "messageKey",
+        message_status AS "messageStatus",
+        send_status AS "sendStatus",
+        verify_try_count AS "verifyTryCount",
+        verify_next_retry_time AS "verifyNextRetryTime",
+        send_try_count AS "sendTryCount",
+        send_next_retry_time AS "sendNextRetryTime",
+        create_time AS "createTime",
+        update_time AS "updateTime"
+        FROM
+        message
+        WHERE
+        id > #{id}
+        AND message_status = 2 and send_status = 1
+        AND CURRENT_TIMESTAMP >= send_next_retry_time
+        LIMIT #{limitCount}
+    </select>
+
+</mapper>

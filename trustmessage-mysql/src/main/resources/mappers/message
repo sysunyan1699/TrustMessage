@@ -1,0 +1,15 @@
+CREATE TABLE message (
+	id INT NOT NULL AUTO_INCREMENT,
+	message VARCHAR(2000) COMMENT '消息内容',
+	message_key VARCHAR(255) COMMENT '消息唯一键，用于做回查的标识',
+	message_status INT COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-unknown',
+	verify_try_count INT COMMENT '消息状态回查 下次重试次数',
+	verify_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '消息状态回查 下次重试时间 1-未发送 2-已发送',
+	send_status INT DEFAULT 0 COMMENT  '0-投递中 1-投递成功   2-投递失败',
+	send_try_count INT COMMENT 'commit 消息发送 下次重试次数',
+	send_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'commit 消息发送 下次重试时间',
+	create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	UNIQUE INDEX idx_messageKey(message_key)
+) ENGINE=InnoDB;

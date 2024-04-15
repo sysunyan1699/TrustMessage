@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.trustmessage.middleware.mapper.MessageMapper">
+
+    <!-- 插入操作 插入数据后获取自动生成的主键 -->
+    <insert id="insertMessage" parameterType="com.example.trustmessage.middleware.model.Message"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO message (
+            message,
+            biz_id,
+            message_key,
+            message_status,
+            forward_topic,
+            forward_key,
+            verify_info,
+            verify_try_count,
+            verify_next_retry_time,
+            send_status,
+            send_try_count,
+            send_next_retry_time
+        ) VALUES (
+            #{message},
+            #{bizID},
+            #{messageKey},
+            #{messageStatus},
+            #{forwardTopic},
+            #{forwardKey},
+            #{verifyInfo},
+            #{verifyTryCount},
+            #{verifyNextRetryTime},
+            #{sendStatus},
+            #{sendTryCount},
+            #{sendNextRetryTime}
+        )
+    </insert>
+
+    <select id="findByMessageKeyAndBizID" resultType="com.example.trustmessage.middleware.model.Message">
+        SELECT
+        id,
+        biz_id AS bizID,
+        message AS message,
+        message_key AS "messageKey",
+        message_status AS "messageStatus",
+        forward_topic AS "forwardTopic",
+        forward_key AS "forwardKey",
+        verify_info AS "verifyInfo",
+        verify_try_count AS "verifyTryCount",
+        verify_next_retry_time AS "verifyNextRetryTime",
+        send_status AS "sendStatus",
+        send_try_count AS "sendTryCount",
+        send_next_retry_time AS "sendNextRetryTime",
+        create_time AS "createTime",
+        update_time AS "updateTime"
+        FROM
+        message
+        WHERE
+        message_key = #{messageKey}
+        AND biz_id = #{bizID}
+    </select>
+
+
+    <update id="updateMessageStatusByMessageKeyAndBizID" parameterType="map">
+        UPDATE message
+        SET message_status = #{messageStatus}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND message_status = #{originalMessageStatus}
+    </update>
+
+
+    <update id="updateSendStatusByMessageKeyAndBizID" parameterType="map">
+        UPDATE message
+        SET send_status = #{sendStatus}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND send_status = #{originalSendStatus}
+    </update>
+
+
+    <update id="updateVerifyRetryCountAndTime" parameterType="map">
+        UPDATE message
+        SET verify_try_count = #{verifyTryCount}, verify_next_retry_time = #{verifyNextRetryTime}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID}
+    </update>
+
+
+    <update id="updateSendRetryCountAndTime" parameterType="map">
+        UPDATE message
+        SET send_try_count = #{sendTryCount}, send_next_retry_time = #{sendNextRetryTime}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID}
+    </update>
+
+    <update id="updateVerifyInfo" parameterType="map">
+        UPDATE message
+        <set>
+            <if test="messageStatus!= null">
+                message_status = #{messageStatus},
+            </if>
+            <if test="verifyTryCount != null">
+                verify_try_count = #{verifyTryCount},
+            </if>
+
+            <if test="verifyNextRetryTime != null">
+                verify_next_retry_time = #{verifyNextRetryTime}
+            </if>
+        </set>
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND message_status = #{originalVerifyStatus}
+    </update>
+
+
+    <update id="updateSendInfo" parameterType="map">
+        UPDATE message
+        <set>
+            send_status = #{sendStatus}
+            <if test="sendStatus!= null">
+                send_status = #{sendStatus},
+            </if>
+            <if test="sendTryCount != null">
+                send_try_count = #{sendTryCount},
+            </if>
+
+            <if test="sendNextRetryTime != null">
+                send_next_retry_time = #{sendNextRetryTime}
+            </if>
+        </set>
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND send_status = #{originalSendStatus}
+    </update>
+
+
+
+
+    <select id="findMessagesForVerify" resultType="com.example.trustmessage.middleware.model.Message"
+            parameterType="map">
+        SELECT
+            id,
+            biz_id AS bizID,
+            message AS message,
+            message_key AS "messageKey",
+            message_status AS "messageStatus",
+            forward_topic AS "forwardTopic",
+            forward_key AS "forwardKey",
+            verify_info AS "verifyInfo",
+            verify_try_count AS "verifyTryCount",
+            verify_next_retry_time AS "verifyNextRetryTime",
+            send_status AS "sendStatus",
+            send_try_count AS "sendTryCount",
+            send_next_retry_time AS "sendNextRetryTime",
+            create_time AS "createTime",
+            update_time AS "updateTime"
+        FROM
+        message
+        WHERE
+        id > #{id}
+        AND CURRENT_TIMESTAMP >= verify_next_retry_time
+        AND message_status = 1
+        LIMIT #{limitCount}
+    </select>
+
+
+    <select id="findMessagesForSend" resultType="com.example.trustmessage.middleware.model.Message" parameterType="map">
+        SELECT
+            id,
+            biz_id AS bizID,
+            message AS message,
+            message_key AS "messageKey",
+            message_status AS "messageStatus",
+            forward_topic AS "forwardTopic",
+            forward_key AS "forwardKey",
+            verify_info AS "verifyInfo",
+            verify_try_count AS "verifyTryCount",
+            verify_next_retry_time AS "verifyNextRetryTime",
+            send_status AS "sendStatus",
+            send_try_count AS "sendTryCount",
+            send_next_retry_time AS "sendNextRetryTime",
+            create_time AS "createTime",
+            update_time AS "updateTime"
+        FROM
+        message
+        WHERE
+        id > #{id}
+        AND CURRENT_TIMESTAMP >= send_next_retry_time
+        AND message_status = 2 and send_status = 1
+        LIMIT #{limitCount}
+    </select>
+
+</mapper>
