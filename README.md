@@ -5,13 +5,10 @@ TrustMessage- 2PC+MySQL实现可靠消息中心
 ![6.png](src%2Fmain%2Fresources%2F6.png)
 
 trustmessage-mysql 实现了基于2PC+MySQl表的可靠事件中心，业务操作+消息表操作均存在于同一个项目中
-
-trustmessage-middleware，trustmessage-middlewareapi 实现了基于RPC接口提交消息+PC+MySQl表的可靠事件中心
-
+trustmessage-middleware，trustmessage-middlewareapi 实现了基于RPC接口提交消息+2PC+MySQl表的可靠事件中心
 trustmessage-middlewareclient 提供了HTTP回查接口、Dubbo泛化回查接口的示例
 
 以下内容是正式介绍。
-
 
 在业务处理中，经常会有重要但没那么紧急的数据需要同步给下游，比如
 1. 订单侧完成消息后给优惠侧发一个消息，优惠侧做一个单向对账的功能
