@@ -15,7 +15,6 @@ public class VerifyController {
 
     @GetMapping("/verifyMessage")
     public ResponseEntity<?> verifyMessage(@RequestParam int bizID, @RequestParam String messageKey) {
-
         // todo 根据messageKey查询对应业务数据的处理结果
         //MessageStatus status = getMessageStatus(messageId);
         HTTPVerifyResponse.Data data = new HTTPVerifyResponse.Data(messageKey, MessageStatus.PREPARE.getValue());

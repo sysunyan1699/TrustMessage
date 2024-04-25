@@ -253,7 +253,7 @@ CREATE TABLE message (
 # 4. 基于kafka 提交消息实现的可靠事件中心
 在实现消息回查的可靠消息中心方案中，另外一种常见的方案是 业务代码直接把消息提交给kafka, 然后中间件消费消息并持久化道数据库中，等待消息提交commit 或者rollback , 没有的话就进行回查。如下图，图片源自极客时间专栏
 
-![5.png](src%2Fmain%2Fresources%2F5.png)![[截屏2024-04-14 16.22.52.png]]
+![5.png](sr![img.png](img.png)c%2Fmain%2Fresources%2F5.png)![[截屏2024-04-14 16.22.52.png]]
 
 
 我认为两种技术方案没有本质的区别， 其差异只是消息的prepare 、commit、rollback 的提交是由RPC 接口完成还是由消息生产消费完成， 其他回查的逻辑、发送逻辑、以及需要的信息基本无差异。 

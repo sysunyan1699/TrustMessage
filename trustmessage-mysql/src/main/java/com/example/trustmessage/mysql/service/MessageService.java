@@ -23,7 +23,22 @@ public interface MessageService {
                                           int verifyTryCount,
                                           LocalDateTime verifyNextRetryTime);
 
+    boolean updateVerifyInfo(String messageKey,
+                             int messageStatus,
+                             int originalMessageStatus,
+                             int verifyTryCount,
+                             LocalDateTime verifyNextRetryTime);
+
     boolean updateSendRetryCountAndTime(String messageKey,
                                         int sendTryCount,
                                         LocalDateTime sendNextRetryTime);
+
+    boolean updateSendInfo(String messageKey,
+                           int sendStatus,
+                           int originalSendStatus,
+                           int sendTryCount,
+                           LocalDateTime sendNextRetryTime
+    );
+
+
 }

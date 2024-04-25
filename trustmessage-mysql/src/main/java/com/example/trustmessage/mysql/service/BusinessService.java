@@ -4,7 +4,7 @@ import com.example.trustmessage.mysql.common.MessageStatus;
 
 public interface BusinessService {
 
-    public void business();
+    void business();
 
-    public MessageStatus verifyMessageStatus(String messageKey);
+    MessageStatus verifyMessageStatus(String messageKey);
 }

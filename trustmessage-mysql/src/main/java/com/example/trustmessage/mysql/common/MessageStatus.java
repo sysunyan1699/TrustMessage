@@ -8,7 +8,7 @@ public enum MessageStatus {
     ROLLBACK(3, "rollback"),
 
     //达到最大消息回查重试次数后,消息状态未知，需要告警处理
-    UNKNOWN(4, "");
+    VERIFY_FAIL(4, "verify fail");
 
     private int value;
 

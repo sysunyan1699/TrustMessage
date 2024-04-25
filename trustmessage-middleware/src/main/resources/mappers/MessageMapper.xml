@@ -7,31 +7,31 @@
     <insert id="insertMessage" parameterType="com.example.trustmessage.middleware.model.Message"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO message (
-            message,
-            biz_id,
-            message_key,
-            message_status,
-            forward_topic,
-            forward_key,
-            verify_info,
-            verify_try_count,
-            verify_next_retry_time,
-            send_status,
-            send_try_count,
-            send_next_retry_time
+        message,
+        biz_id,
+        message_key,
+        message_status,
+        forward_topic,
+        forward_key,
+        verify_info,
+        verify_try_count,
+        verify_next_retry_time,
+        send_status,
+        send_try_count,
+        send_next_retry_time
         ) VALUES (
-            #{message},
-            #{bizID},
-            #{messageKey},
-            #{messageStatus},
-            #{forwardTopic},
-            #{forwardKey},
-            #{verifyInfo},
-            #{verifyTryCount},
-            #{verifyNextRetryTime},
-            #{sendStatus},
-            #{sendTryCount},
-            #{sendNextRetryTime}
+        #{message},
+        #{bizID},
+        #{messageKey},
+        #{messageStatus},
+        #{forwardTopic},
+        #{forwardKey},
+        #{verifyInfo},
+        #{verifyTryCount},
+        #{verifyNextRetryTime},
+        #{sendStatus},
+        #{sendTryCount},
+        #{sendNextRetryTime}
         )
     </insert>
 
@@ -124,26 +124,24 @@
     </update>
 
 
-
-
     <select id="findMessagesForVerify" resultType="com.example.trustmessage.middleware.model.Message"
             parameterType="map">
         SELECT
-            id,
-            biz_id AS bizID,
-            message AS message,
-            message_key AS "messageKey",
-            message_status AS "messageStatus",
-            forward_topic AS "forwardTopic",
-            forward_key AS "forwardKey",
-            verify_info AS "verifyInfo",
-            verify_try_count AS "verifyTryCount",
-            verify_next_retry_time AS "verifyNextRetryTime",
-            send_status AS "sendStatus",
-            send_try_count AS "sendTryCount",
-            send_next_retry_time AS "sendNextRetryTime",
-            create_time AS "createTime",
-            update_time AS "updateTime"
+        id,
+        biz_id AS bizID,
+        message AS message,
+        message_key AS "messageKey",
+        message_status AS "messageStatus",
+        forward_topic AS "forwardTopic",
+        forward_key AS "forwardKey",
+        verify_info AS "verifyInfo",
+        verify_try_count AS "verifyTryCount",
+        verify_next_retry_time AS "verifyNextRetryTime",
+        send_status AS "sendStatus",
+        send_try_count AS "sendTryCount",
+        send_next_retry_time AS "sendNextRetryTime",
+        create_time AS "createTime",
+        update_time AS "updateTime"
         FROM
         message
         WHERE
@@ -156,21 +154,21 @@
 
     <select id="findMessagesForSend" resultType="com.example.trustmessage.middleware.model.Message" parameterType="map">
         SELECT
-            id,
-            biz_id AS bizID,
-            message AS message,
-            message_key AS "messageKey",
-            message_status AS "messageStatus",
-            forward_topic AS "forwardTopic",
-            forward_key AS "forwardKey",
-            verify_info AS "verifyInfo",
-            verify_try_count AS "verifyTryCount",
-            verify_next_retry_time AS "verifyNextRetryTime",
-            send_status AS "sendStatus",
-            send_try_count AS "sendTryCount",
-            send_next_retry_time AS "sendNextRetryTime",
-            create_time AS "createTime",
-            update_time AS "updateTime"
+        id,
+        biz_id AS bizID,
+        message AS message,
+        message_key AS "messageKey",
+        message_status AS "messageStatus",
+        forward_topic AS "forwardTopic",
+        forward_key AS "forwardKey",
+        verify_info AS "verifyInfo",
+        verify_try_count AS "verifyTryCount",
+        verify_next_retry_time AS "verifyNextRetryTime",
+        send_status AS "sendStatus",
+        send_try_count AS "sendTryCount",
+        send_next_retry_time AS "sendNextRetryTime",
+        create_time AS "createTime",
+        update_time AS "updateTime"
         FROM
         message
         WHERE

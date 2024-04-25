@@ -2,8 +2,11 @@ package com.example.trustmessage.mysql.common;
 
 public enum MessageSendStatus {
 
-    NOT_SEND(1, "未发送"),
-    HAVE_SENDED(2, "已发送");
+    NOT_SEND(0, "未发送"),
+    SEND_SUCCESS(1,"发送成功"),
+
+    //发送重试达最大次数， 需要人工介入处理
+    SEND_FAIL(2, "发送失败");
 
 
     private int value;

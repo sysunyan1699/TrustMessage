@@ -18,8 +18,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public boolean prepareMessage(Message message) {
-        int result = messageMapper.insertMessage(message);
-        return result == 1;
+        return messageMapper.insertMessage(message) == 1;
     }
 
     @Override
@@ -46,8 +45,7 @@ public class MessageServiceImpl implements MessageService {
         params.put("messageKey", messageKey);
         params.put("messageStatus", messageStatus);
         params.put("originalMessageStatus", originalMessageStatus);
-        int result = messageMapper.updateMessageStatusByMessageKey(params);
-        return result == 1;
+        return doUpdateVerifyInfo(params);
     }
 
 
@@ -59,9 +57,30 @@ public class MessageServiceImpl implements MessageService {
         params.put("messageKey", messageKey);
         params.put("verifyTryCount", verifyTryCount);
         params.put("verifyNextRetryTime", verifyNextRetryTime);
-        int result = messageMapper.updateVerifyRetryCountAndTime(params);
-        return result == 1;
+        return doUpdateVerifyInfo(params);
+
     }
+
+    @Override
+    public boolean updateVerifyInfo(String messageKey,
+                                    int messageStatus,
+                                    int originalMessageStatus,
+                                    int verifyTryCount,
+                                    LocalDateTime verifyNextRetryTime) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("messageKey", messageKey);
+        params.put("messageStatus", messageStatus);
+        params.put("originalMessageStatus", originalMessageStatus);
+        params.put("verifyTryCount", verifyTryCount);
+        params.put("verifyNextRetryTime", verifyNextRetryTime);
+
+        return doUpdateVerifyInfo(params);
+    }
+
+    private boolean doUpdateVerifyInfo(Map<String, Object> params) {
+        return messageMapper.updateVerifyInfo(params) == 1;
+    }
+
 
     @Override
     public boolean updateSendStatusByMessageKey(String messageKey,
@@ -71,8 +90,7 @@ public class MessageServiceImpl implements MessageService {
         params.put("messageKey", messageKey);
         params.put("sendStatus", sendStatus);
         params.put("originalSendStatus", originalSendStatus);
-        int result = messageMapper.updateSendStatusByMessageKey(params);
-        return result == 1;
+        return doUpdateSendInfo(params);
     }
 
     @Override
@@ -83,7 +101,28 @@ public class MessageServiceImpl implements MessageService {
         params.put("messageKey", messageKey);
         params.put("sendTryCount", sendTryCount);
         params.put("sendNextRetryTime", sendNextRetryTime);
-        int result = messageMapper.updateSendRetryCountAndTime(params);
-        return result == 1;
+        return doUpdateSendInfo(params);
     }
+
+    @Override
+    public boolean updateSendInfo(String messageKey,
+                                  int sendStatus,
+                                  int originalSendStatus,
+                                  int sendTryCount,
+                                  LocalDateTime sendNextRetryTime) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("messageKey", messageKey);
+        params.put("sendTryCount", sendTryCount);
+        params.put("sendNextRetryTime", sendNextRetryTime);
+        params.put("sendStatus", sendStatus);
+        params.put("originalSendStatus", originalSendStatus);
+
+        return doUpdateSendInfo(params);
+
+    }
+
+    private boolean doUpdateSendInfo(Map<String, Object> params) {
+        return messageMapper.updateSendInfo(params) == 1;
+    }
+
 }

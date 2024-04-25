@@ -42,18 +42,13 @@ public class VerifyMessageSchedule {
     @Value("${verify.selectLimitCount:100}")
     private int verifySelectLimitCount;
 
-    int corePoolSize = Runtime.getRuntime().availableProcessors() * 2; // 对IO密集型任务，可以增加核心线程数
-    int maximumPoolSize = corePoolSize * 2; // 最大线程数可以设置更大
-    long keepAliveTime = 60L; // 增加闲置超时时间，给予线程更多的等待时间，减少创建和销毁的开销
-    TimeUnit unit = TimeUnit.SECONDS;
-    BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(500); // 根据任务队列的实际情况调整
     ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            corePoolSize,
-            maximumPoolSize,
-            keepAliveTime,
-            unit,
-            workQueue,
-            new ThreadPoolExecutor.CallerRunsPolicy() // 饱和策略
+            16,
+            32,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(500),
+            new ThreadPoolExecutor.AbortPolicy()
     );
 
     @Scheduled(fixedRate = 60000)
@@ -66,6 +61,7 @@ public class VerifyMessageSchedule {
             params.put("limitCount", verifySelectLimitCount);
             List<Message> messageList = messageMapper.findMessagesForVerify(params);
             if (messageList.size() == 0) {
+                logger.info("Task finish  at: {}", new java.util.Date());
                 return;
             }
             for (Message m : messageList) {
@@ -83,30 +79,30 @@ public class VerifyMessageSchedule {
 
 
     private void doVerify(Message m) {
-        if (m.getMessageStatus() != MessageStatus.PREPARE.getValue()) {
-            return;
-        }
         // 防止之前状态修改有遗漏
-        if (m.getVerifyTryCount() == verifyMaxTryCount) {
+        if (m.getVerifyTryCount() >= verifyMaxTryCount) {
+            logger.error("状态回查重试已达最大次数，messageKey:{},message:{}",
+                    m.getMessageKey(), m.getMessage());
             messageService.updateMessageStatusByMessageKey(
                     m.getMessageKey(),
-                    MessageStatus.UNKNOWN.getValue(),
+                    MessageStatus.VERIFY_FAIL.getValue(),
                     MessageStatus.PREPARE.getValue());
 
-            //todo 打印错误日志，进行告警
             return;
         }
+        // 消息状态回查
         MessageStatus verifyResult = businessService.verifyMessageStatus(m.getMessageKey());
         switch (verifyResult) {
             case PREPARE:
-                // 此次重试已经是最大重试次数，之后不再重试， 直接修改状态为unknown 并告警人工介入
-                logger.info("doVerify, bizID:{}, messageKey:{}, verifyResult:{}", m.getMessageKey(), verifyResult);
-                if (m.getVerifyTryCount() == verifyMaxTryCount) {
-                    messageService.updateMessageStatusByMessageKey(
+                // 此次重试已经是最大重试次数，打印错误日志告警
+                if (m.getVerifyTryCount() + 1 == verifyMaxTryCount) {
+                    logger.error("消息回查重试已达最大次数, messageKey:{}, message:{}", m.getMessageKey(), m.getMessage());
+                    messageService.updateVerifyInfo(
                             m.getMessageKey(),
-                            MessageStatus.UNKNOWN.getValue(),
-                            MessageStatus.PREPARE.getValue());
-                    // 打印错误日志，进行告警
+                            MessageStatus.VERIFY_FAIL.getValue(),
+                            MessageStatus.PREPARE.getValue(),
+                            m.getVerifyTryCount() + 1,
+                            null);
                 } else {
                     messageService.updateVerifyRetryCountAndTime(
                             m.getMessageKey(),
@@ -116,10 +112,20 @@ public class VerifyMessageSchedule {
                 break;
             case COMMIT:
                 // 直接修改状态
-                messageService.commitMessage(m.getMessageKey());
+                messageService.updateVerifyInfo(
+                        m.getMessageKey(),
+                        MessageStatus.COMMIT.getValue(),
+                        MessageStatus.PREPARE.getValue(),
+                        m.getVerifyTryCount() + 1,
+                        null);
                 break;
             case ROLLBACK:
-                messageService.rollbackMessage(m.getMessageKey());
+                messageService.updateVerifyInfo(
+                        m.getMessageKey(),
+                        MessageStatus.ROLLBACK.getValue(),
+                        MessageStatus.PREPARE.getValue(),
+                        m.getVerifyTryCount() + 1,
+                        null);
                 break;
         }
 

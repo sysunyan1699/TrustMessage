@@ -6,6 +6,8 @@ import com.example.trustmessage.mysql.model.Message;
 import com.example.trustmessage.mysql.service.BusinessService;
 import com.example.trustmessage.mysql.service.MessageService;
 import com.example.trustmessage.mysql.utils.MessageUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public void business() {
 
-        // 根据业务信息组织消息表需要的信息
+
         Message m = new Message();
         m.setMessage("message1");
         m.setMessageKey("key1");
@@ -28,18 +30,16 @@ public class BusinessServiceImpl implements BusinessService {
         m.setMessageStatus(MessageStatus.PREPARE.getValue());
         m.setVerifyTryCount(1);
         m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
-
         m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m.setSendTryCount(1);
+        m.setSendTryCount(0);
         m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
-
-
+        // 1.根据业务信息组织prepare 消息
         messageService.prepareMessage(m);
 
-        // 业务操作
-        boolean businessResult = true;
+        // 2.业务操作
+        boolean businessResult = dealBusiness();
 
-        // commit 或者rollback 失败可以进行合理重试
+        // 3. commit 或者rollback 如果状态更新失败等待后续消息回查逻辑更新
         if (businessResult) {
             messageService.commitMessage("key1");
         } else {
@@ -51,5 +51,10 @@ public class BusinessServiceImpl implements BusinessService {
     public MessageStatus verifyMessageStatus(String messageKey) {
         // 查询发现对应的业务逻辑还未执行完成，返回prepare, 消息对消费者依然不可见
         return MessageStatus.PREPARE;
+    }
+
+
+    public boolean dealBusiness() {
+        return true;
     }
 }

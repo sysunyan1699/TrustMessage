@@ -22,29 +22,24 @@ class MessageServiceImplTest {
     void prepareMessage() {
 
         Message m = new Message();
-        m.setMessage("message1");
-        m.setMessageKey("key1");
+        m.setMessage("message4");
+        m.setMessageKey("key4");
         m.setMessageStatus(MessageStatus.PREPARE.getValue());
-        m.setVerifyTryCount(1);
         m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
         m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m.setSendTryCount(1);
         m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
         assertEquals(true, messageService.prepareMessage(m));
     }
 
     @Test
     void commitMessage() {
-
-        assertEquals(true, messageService.commitMessage("key1"));
-
-
+        assertEquals(true, messageService.commitMessage("key4"));
     }
 
     @Test
     void rollbackMessage() {
 
-        assertEquals(true, messageService.rollbackMessage("key1"));
+        assertEquals(true, messageService.rollbackMessage("key3"));
 
     }
 

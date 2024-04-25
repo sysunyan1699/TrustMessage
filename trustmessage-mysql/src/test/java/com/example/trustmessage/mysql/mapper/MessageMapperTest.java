@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,10 +30,8 @@ class MessageMapperTest {
         m1.setMessageStatus(MessageStatus.PREPARE.getValue());
 
         m1.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m1.setVerifyTryCount(1);
         m1.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
 
-        m1.setSendTryCount(1);
         m1.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
 
         assertEquals(1, messageMapper.insertMessage(m1));
@@ -43,9 +42,7 @@ class MessageMapperTest {
         m2.setMessageStatus(MessageStatus.PREPARE.getValue());
 
         m2.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m2.setVerifyTryCount(1);
         m2.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
-        m2.setSendTryCount(1);
         m2.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
 
         assertEquals(1, messageMapper.insertMessage(m2));
@@ -57,9 +54,7 @@ class MessageMapperTest {
         m3.setMessageStatus(MessageStatus.PREPARE.getValue());
 
         m3.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m3.setVerifyTryCount(1);
         m3.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
-        m3.setSendTryCount(1);
         m3.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
 
         assertEquals(1, messageMapper.insertMessage(m3));
@@ -74,26 +69,45 @@ class MessageMapperTest {
     }
 
     @Test
-    void updateMessageStatusByMessageKey() {
-    }
-
-    @Test
-    void updateSendStatusByMessageKey() {
-    }
-
-    @Test
-    void updateVerifyRetryCountAndTime() {
-    }
-
-    @Test
-    void updateSendRetryCountAndTime() {
-    }
-
-    @Test
     void findMessagesForVerify() {
     }
 
     @Test
     void findMessagesForSend() {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("id", 0);
+        params.put("limitCount", 100);
+        List<Message> messageList = messageMapper.findMessagesForSend(params);
+        assertEquals(1, messageList.size());
+
+    }
+
+    @Test
+    void updateSendInfo() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("messageKey", "key2");
+        params.put("sendTryCount", 1);
+        params.put("sendNextRetryTime", LocalDateTime.now().plusSeconds(60));
+        params.put("originalSendStatus", MessageSendStatus.NOT_SEND.getValue());
+        assertEquals(1, messageMapper.updateSendInfo(params));
+
+
+        params.put("sendTryCount", 2);
+        params.put("sendNextRetryTime", LocalDateTime.now().plusSeconds(60));
+        params.put("sendStatus", MessageSendStatus.SEND_FAIL.getValue());
+        assertEquals(1, messageMapper.updateSendInfo(params));
+    }
+
+    @Test
+    void updateVerifyInfo() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("messageKey", "key2");
+        params.put("messageStatus", MessageStatus.COMMIT.getValue());
+        params.put("originalMessageStatus", MessageStatus.PREPARE.getValue());
+        params.put("verifyTryCount", 1);
+        //params.put("verifyNextRetryTime", LocalDateTime.now().plusSeconds(60));
+        //messageMapper.updateVerifyInfo(params);
+        assertEquals(1, messageMapper.updateVerifyInfo(params));
     }
 }

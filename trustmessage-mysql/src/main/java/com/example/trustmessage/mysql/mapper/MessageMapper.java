@@ -1,6 +1,5 @@
 package com.example.trustmessage.mysql.mapper;
 
-
 import java.util.List;
 import java.util.Map;
 
@@ -18,17 +17,13 @@ public interface MessageMapper {
 
     Message findByMessageKey(Map<String, Object> params);
 
-    int updateMessageStatusByMessageKey(Map<String, Object> params);
-
-    int updateSendStatusByMessageKey(Map<String, Object> params);
-
-    int updateVerifyRetryCountAndTime(Map<String, Object> params);
-
-    int updateSendRetryCountAndTime(Map<String, Object> params);
-
     List<Message> findMessagesForVerify(Map<String, Object> params);
 
     List<Message> findMessagesForSend(Map<String, Object> params);
+
+    int updateSendInfo(Map<String, Object> params);
+
+    int updateVerifyInfo(Map<String, Object> params);
 
 
 }
