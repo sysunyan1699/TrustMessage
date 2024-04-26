@@ -1,4 +1,4 @@
- TrustMessage- 2PC+MySQL实现可靠消息中心
+ TrustMessage- 基于2PC+MySQL实现回查功能的可靠消息中心
 # 0. 项目结构介绍
 | Module                        | Description                                                  |
 | ----------------------------- | ------------------------------------------------------------ |
@@ -6,6 +6,7 @@
 | turstmessage-middleware       | 可靠消息中心中间件，基于RPC接口提交消息+2PC+MySQL 表实现     |
 | turstmessage-middlewareapi    | 可靠消息中心中间件， 回查接口定义                            |
 | Turstmessage-middlewareclient | 可靠消息中心中间件， 消息生产者，提供了HTTP回查接口、Dubbo泛化回查接口的示例 |
+
 
 以下是项目正式介绍。
 
@@ -32,7 +33,7 @@
 
 ## 1.1 业务流程
 
-![1.png](src%2Fmain%2Fresources%2F1.png)![[1.png|500]]
+![1.png](docs%2Fimage%2F1.png)![[1.png|500]]
 以上流程中，在本地事务提交后，有一个定时任务轮询消息表将需要发送的消息消息发送出去。有4个点需要注意一下
 
 1. 事务提交后了，消息发送失败， 定时任务的重试机制，会找出这条消息进行异步补发 
@@ -57,15 +58,16 @@
 在本地事务+ 本地消息表 方案中，其消息表的设计一般如下，
 
 ```sql
-CREATE TABLE message (  
-	id INT NOT NULL AUTO_INCREMENT,  
-	message VARCHAR(2000) COMMENT '消息内容',
+CREATE TABLE message (
+	id bigint unsigned NOT NULL AUTO_INCREMENT,
+	message text COMMENT '消息内容',
 	send_status INT DEFAULT 0 COMMENT '0-投递中 1-投递成功 2-投递失败',
-	send_try_count INT COMMENT '消息发送 下次重试次数',  
-	send_next_retry_time TIMESTAMP COMMENT '消息发送 下次重试时间', 
-	create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
-	update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
-	PRIMARY KEY (id),  
+	send_try_count INT DEFAULT 0 COMMENT 'commit 消息发送 当前重试次数',
+	send_next_retry_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息发送 下次重试时间',
+	create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+	update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	UNIQUE INDEX idx_messageKey(message_key)
 ) ENGINE=InnoDB;
 ```
 
@@ -79,7 +81,7 @@ CREATE TABLE message (
 
 ## 2.1 业务流程
 以MySQL消息表+ 2PC 来实现可靠消息中心， 其整体实现流程如下
-![2.png](src%2Fmain%2Fresources%2F2.png)![[2 2.png]]
+![2.png](docs%2Fimage%2F2.png)![[2 2.png]]
 
 ## 2.2 消息可见性
 
@@ -89,7 +91,7 @@ message_status INT COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-unknown
 ```
 
 其状态流转如图所示
-![4.png](src%2Fmain%2Fresources%2F4.png)![[4 1.png|300]]
+![4.png](docs%2Fimage%2F4.png)![[4 1.png|300]]
 ## 2.3 如果业务执行消息commit or rollback 失败怎么办-消息回查
 
 如流程图中所示，在2PC 阶段，拿到业务执行结果修改消息状态失败有可能是失败。
@@ -136,20 +138,20 @@ verify_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '消息状态
 
 ## 2.7 消息表设计
 ```sql
-CREATE TABLE message (  
-	id INT NOT NULL AUTO_INCREMENT,  
-	message VARCHAR(2000) COMMENT '消息内容',  
-	message_key VARCHAR(255) COMMENT '消息唯一键，用于做回查的标识',  
-	message_status INT COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-unknown',  
-	verify_try_count INT COMMENT '消息状态回查 下次重试次数',  
-	verify_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '消息状态回查 下次重试时间 1-未发送 2-已发送',  
-	send_status INT DEFAULT 0 COMMENT '0-投递中 1-投递成功 2-投递失败',  
-	send_try_count INT COMMENT 'commit 消息发送 下次重试次数',  
-	send_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'commit 消息发送 下次重试时间',  
-	create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
-	update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
-	PRIMARY KEY (id),  
-	UNIQUE INDEX idx_messageKey(message_key)  
+CREATE TABLE message (
+	id bigint unsigned NOT NULL AUTO_INCREMENT,
+	message_key VARCHAR(255) COMMENT '消息唯一键，用于做回查的标识',
+	message text COMMENT '消息内容',
+	message_status INT DEFAULT 1 COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-unknown',
+	verify_try_count INT DEFAULT 0 COMMENT '消息状态回查 当前重试次数',
+	verify_next_retry_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息状态回查 下次重试时间',
+	send_status INT DEFAULT 0 COMMENT '0-投递中 1-投递成功 2-投递失败',
+	send_try_count INT DEFAULT 0 COMMENT 'commit 消息发送 当前重试次数',
+	send_next_retry_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息发送 下次重试时间',
+	create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+	update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	UNIQUE INDEX idx_messageKey(message_key)
 ) ENGINE=InnoDB;
 ```
 
@@ -179,12 +181,12 @@ CREATE TABLE message (
 
 ## 3.1 业务流程
 
-![3.png](src%2Fmain%2Fresources%2F3.png)![[3.png|600]]
+![3.png](docs%2Fimage%2F3.png)![[3.png|600]]
 
 ## 3.2 两阶段提交功能
 提供3个RPC 接口， prepare， commit, rollback, 接口底层封装对数据表的操作
 ## 3.3 消息唯一性
-当作为一个公共中间件，接受多个业务数据的时候，消息的唯一性应该有业务id + 消息标识共同确定
+当作为一个公共中间件，接受多个业务数据的时候，消息的唯一性应该有业务标识 + 消息标识共同确定，即bizId + messageKey
 
 ## 3.4 回查功能
 相比于直接在业务服务里集成可靠消息的功能时，可以简单直接的在服务内部查询，当作为公共中间件时，  只能通过服务间调用完成，服务间调用有两种形式
@@ -227,24 +229,24 @@ forward_key VARCHAR(255) COMMENT '业务转发指定key',
 ```
 ## 3.6 消息表设计
 ```sql
-CREATE TABLE message (  
-	id INT NOT NULL AUTO_INCREMENT,  
-	biz_id INT,  
-	message VARCHAR(2000) COMMENT '消息内容',  
-	message_key VARCHAR(255) COMMENT '消息唯一键，用于做回查的标识',  
-	message_status INT COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-unknown',  
-	forward_topic VARCHAR(255) COMMENT '业务转发topic',  
-	forward_key VARCHAR(255) COMMENT '业务转发指定key',  
-	verify_info VARCHAR(2000) COMMENT '回查信息',  
-	verify_try_count INT COMMENT '消息状态回查 下次重试次数',  
-	verify_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '消息状态回查 下次重试时间 1-未发送 2-已发送',  
-	send_status INT COMMENT '1-未发送 2-已发送',  
-	send_try_count INT COMMENT 'commit 消息发送 下次重试次数',  
-	send_next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'commit 消息发送 下次重试时间',  
-	create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
-	update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
-	PRIMARY KEY (id),  
-	UNIQUE INDEX idx_message_key_biz_id (message_key, biz_id)  
+CREATE TABLE message (
+	id bigint unsigned NOT NULL AUTO_INCREMENT,
+    biz_id INT NOT NULL COMMENT '业务ID',
+    message_key VARCHAR(255) COMMENT '消息唯一键，用于做回查的标识',
+	message text COMMENT '消息内容',
+	message_status INT DEFAULT 1 COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-verify fail',
+    forward_topic VARCHAR(255) NOT NULL COMMENT '业务转发topic',
+	forward_key VARCHAR(255) COMMENT '业务转发指定key',
+    verify_info VARCHAR(2000) COMMENT '回查信息',
+	verify_try_count INT DEFAULT 0 COMMENT '消息状态回查 当前重试次数',
+	verify_next_retry_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息状态回查 下次重试时间',
+	send_status INT DEFAULT 0 COMMENT '0-投递中 1-投递成功 2-投递失败',
+	send_try_count INT DEFAULT 0 COMMENT 'commit消息发送 当前重试次数',
+	send_next_retry_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息发送 下次重试时间',
+	create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+	update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	UNIQUE INDEX idx_message_key_biz_id (message_key, biz_id)
 ) ENGINE=InnoDB;
 ```
 
@@ -253,7 +255,7 @@ CREATE TABLE message (
 # 4. 基于kafka 提交消息实现的可靠事件中心
 在实现消息回查的可靠消息中心方案中，另外一种常见的方案是 业务代码直接把消息提交给kafka, 然后中间件消费消息并持久化道数据库中，等待消息提交commit 或者rollback , 没有的话就进行回查。如下图，图片源自极客时间专栏
 
-![5.png](sr![img.png](img.png)c%2Fmain%2Fresources%2F5.png)![[截屏2024-04-14 16.22.52.png]]
+![5.png](docs%2Fimage%2F5.png)![[截屏2024-04-14 16.22.52.png]]
 
 
 我认为两种技术方案没有本质的区别， 其差异只是消息的prepare 、commit、rollback 的提交是由RPC 接口完成还是由消息生产消费完成， 其他回查的逻辑、发送逻辑、以及需要的信息基本无差异。 
@@ -363,6 +365,16 @@ public class MiddlewareMessage {
 4. 消费者性能优化， 比如异步处理、批量处理， 但是如果项目已经做好这些措施，面对消息积压，只能回到下面3种方式
 
 综合以上，我个人认为基于RPC接口的方案可以用`自动扩容策略`直接应对， 简单直接优雅。
+
+
+
+# 6. 作为中间件的技术设计
+
+## 6.1 性能提升
+
+1. 线程池异步处理
+2.  cache 存储回查接口
+3. 基于bizID + messageKey 的分库分表
 
 
 
