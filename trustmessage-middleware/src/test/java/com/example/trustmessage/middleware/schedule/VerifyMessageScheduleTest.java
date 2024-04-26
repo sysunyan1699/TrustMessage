@@ -14,7 +14,6 @@ public class VerifyMessageScheduleTest {
     @Test
     public void scheduledTaskTest() {
         verifyMessageSchedule.verifyScheduledTask();
-
     }
 
 }

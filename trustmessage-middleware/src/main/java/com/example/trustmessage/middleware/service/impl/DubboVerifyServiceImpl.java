@@ -8,6 +8,8 @@ import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.rpc.service.GenericService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,9 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class DubboVerifyServiceImpl implements GenericVerifyService {
+
+    private static final Logger logger = LoggerFactory.getLogger(DubboVerifyServiceImpl.class);
+
     private final Cache<String, GenericService> serviceCache;
 
     @Value("${dubbo.cache.maxSize:100}")
@@ -43,17 +48,17 @@ public class DubboVerifyServiceImpl implements GenericVerifyService {
 
     @Override
     public int invoke(int bizID, String messageKey, MiddlewareMessage.VerifyInfo verifyInfo) {
-
         try {
             String cacheKey = generateCacheKey(verifyInfo);
             GenericService genericService = serviceCache.get(cacheKey, () -> buildGenericService(verifyInfo));
             Object result = genericService.$invoke(genericRpcMethod, new String[]{"java.lang.Integer", "java.lang.String"}, new Object[]{bizID, messageKey});
-
             return (int) result;
         } catch (Exception e) {
             // 添加日志记录、错误处理或重试逻辑
-            throw new RuntimeException("Failed to invoke service", e);
+            logger.error("invoke, bizID:{}, messageKey;{}, verifyInfo:{}, error:{}", bizID, messageKey, verifyInfo, e);
         }
+
+        return -1;
     }
 
 

@@ -9,6 +9,7 @@ import com.example.trustmessage.middleware.utils.MessageUtils;
 import com.example.trustmessage.middlewareapi.common.MessageResponse;
 import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.example.trustmessage.middlewareapi.service.MessageService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +31,13 @@ public class MessageServiceImpl implements MessageService {
             return MessageResponseUtil.getMessageResponse(MessageCode.ILLEGAL_PARAM, false);
         }
 
-        Message m = MessageUtils.MiddlewareMessageConvert2MessageStore(mm);
-
-        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
-        m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
+        Message m;
+        try {
+            m = MessageUtils.MiddlewareMessageConvert2Message(mm);
+        } catch (JsonProcessingException e) {
+            logger.error("prepareMessage MiddlewareMessageConvert2Message MiddlewareMessage:{},error:{}", mm, e);
+            return MessageResponseUtil.getMessageResponse(MessageCode.ILLEGAL_PARAM, false);
+        }
         boolean result = innerMessageService.handlePrepareMessage(m);
         return MessageResponseUtil.getMessageResponse(MessageCode.SUCCESS, result);
     }

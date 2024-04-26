@@ -2,6 +2,7 @@ package com.example.trustmessage.middleware.mapper;
 
 import com.example.trustmessage.middleware.common.MessageSendStatus;
 import com.example.trustmessage.middleware.utils.MessageUtils;
+import com.example.trustmessage.middlewareapi.common.MessageStatus;
 import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.example.trustmessage.middlewareapi.common.VerifyProtocolType;
 import com.example.trustmessage.middleware.model.Message;
@@ -33,7 +34,9 @@ public class MessageMapperTest {
         m1.setBizID(1);
         m1.setForwardTopic("real topic");
         m1.setMessageStatus(1);
+        m1.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
         m1.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
+        m1.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
 
         Message m2 = new Message();
         // Populate the message object with test data
@@ -114,9 +117,51 @@ public class MessageMapperTest {
 
         List<Message> result = messageMapper.findMessagesForVerify(params);
 
-        System.out.println(result);
+        assertEquals("findMessagesForVerify", 3, result.size());
+    }
 
-        assertEquals("findMessagesForVerify", 2, result.size());
 
+    @Test
+    public void findMessagesForSendTest() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", 0);
+        params.put("limitCount", 100);
+        List<Message> result = messageMapper.findMessagesForSend(params);
+        assertEquals("findMessagesForSendTest", 3, result.size());
+    }
+
+    @Test
+    public void updateSendInfoTest() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("bizID", 1);
+        params.put("messageKey", "key1");
+        params.put("originalSendStatus", MessageSendStatus.NOT_SEND.getValue());
+        params.put("sendStatus", MessageSendStatus.SEND_FAIL.getValue());
+        params.put("sendTryCount", 2);
+        //params.put("sendNextRetryTime", sendNextRetryTime);
+        assertEquals("updateSendInfoTest", 1, messageMapper.updateSendInfo(params));
+
+        Map<String, Object> params2 = new HashMap<>();
+        params2.put("bizID", 1);
+        params2.put("messageKey", "key1");
+        params2.put("originalSendStatus", MessageSendStatus.SEND_FAIL.getValue());
+        params2.put("sendStatus", MessageSendStatus.NOT_SEND.getValue());
+        params2.put("sendTryCount", 3);
+        params2.put("sendNextRetryTime", LocalDateTime.now().plusSeconds(600));
+        assertEquals("updateSendInfoTest", 1, messageMapper.updateSendInfo(params2));
+    }
+
+
+    @Test
+    public void updateVerifyInfoTest() {
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("bizID", 1);
+        params.put("messageKey", "key1");
+        params.put("originalMessageStatus", MessageStatus.PREPARE.getValue());
+        params.put("messageStatus", MessageStatus.COMMIT.getValue());
+        params.put("verifyTryCount", 1);
+        //params.put("verifyNextRetryTime", verifyNextRetryTime);
+        assertEquals("updateVerifyInfoTest", 1, messageMapper.updateVerifyInfo(params));
     }
 }

@@ -82,7 +82,7 @@ public class InnerMessageServiceImpl implements InnerMessageService {
         params.put("originalMessageStatus", originalMessageStatus);
         params.put("verifyTryCount", verifyTryCount);
         params.put("verifyNextRetryTime", verifyNextRetryTime);
-        return doUpdateSendInfo(params);
+        return doUpdateVerifyInfo(params);
     }
 
     @Override

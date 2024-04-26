@@ -8,12 +8,16 @@ import com.example.trustmessage.middleware.utils.MessageUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import java.time.LocalDateTime;
 
 public class KafkaTrustMessageConsumer {
+
+    private static final Logger logger = LoggerFactory.getLogger(KafkaTrustMessageConsumer.class);
 
     @Autowired
     private InnerMessageService innerMessageService;
@@ -26,31 +30,39 @@ public class KafkaTrustMessageConsumer {
         try {
             message = mapper.readValue(record.value(), MiddlewareMessage.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            logger.error("parse MiddlewareMessage to Message fail,MiddlewareMessage:{},e:{}", record.value(), e);
+            return;
         }
 
-        if (MessageUtils.MiddlewareMessageChecker(message)) {
+        if (!MessageUtils.MiddlewareMessageChecker(message)) {
+            logger.error("MiddlewareMessageChecker fail, message:{}", message);
             //打印error 信息， 结束此次处理
             MessageStatus.PREPARE.getValue();
 
         }
         switch (MessageStatus.valueOf(message.getMessageStatus())) {
             case PREPARE:
-                System.out.println("Handling prepare message: " + record.value());
-                Message m = MessageUtils.MiddlewareMessageConvert2MessageStore(message);
+                logger.info("Handling prepare message: {}", record.value());
+                Message m;
+                try {
+                    m = MessageUtils.MiddlewareMessageConvert2Message(message);
+                } catch (JsonProcessingException e) {
+                    logger.error("MiddlewareMessageConvert2MessageS to Message fail,MiddlewareMessage:{},e:{}", record.value(), e);
+                    return;
+                }
                 m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(0)));
                 innerMessageService.handlePrepareMessage(m);
                 break;
             case COMMIT:
-                System.out.println("Handling commit message: " + record.value());
+                logger.info("Handling commit message: {}", record.value());
                 innerMessageService.handleCommitMessage(message.getBizID(), message.getMessageKey());
                 break;
             case ROLLBACK:
-                System.out.println("Handling rollback message: " + record.value());
+                logger.info("Handling rollback message: {}", record.value());
                 innerMessageService.handleRollbackMessage(message.getBizID(), message.getMessageKey());
                 break;
             default:
-                System.out.println("Unknown message type: " + message.getMessageStatus());
+                logger.error("Unknown message type: {}", record.value());
                 break;
         }
     }

@@ -80,14 +80,12 @@
     <update id="updateSendInfo" parameterType="map">
         UPDATE message
         <set>
-            send_status = #{sendStatus}
             <if test="sendStatus!= null">
                 send_status = #{sendStatus},
             </if>
             <if test="sendTryCount != null">
                 send_try_count = #{sendTryCount},
             </if>
-
             <if test="sendNextRetryTime != null">
                 send_next_retry_time = #{sendNextRetryTime}
             </if>

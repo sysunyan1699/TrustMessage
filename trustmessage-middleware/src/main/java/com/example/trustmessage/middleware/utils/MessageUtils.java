@@ -1,7 +1,9 @@
 package com.example.trustmessage.middleware.utils;
 
+import com.example.trustmessage.middleware.common.MessageSendStatus;
 import com.example.trustmessage.middleware.model.Message;
 import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
@@ -28,7 +30,9 @@ public class MessageUtils {
         return true;
     }
 
-    public static Message MiddlewareMessageConvert2MessageStore(MiddlewareMessage middlewareMessage) {
+    public static Message MiddlewareMessageConvert2Message(MiddlewareMessage middlewareMessage) throws JsonProcessingException {
+
+        String verifyInfoJson = JsonUtil.toJson(middlewareMessage.getVerifyInfo());
 
         Message m = new Message();
         m.setBizID(middlewareMessage.getBizID());
@@ -38,17 +42,11 @@ public class MessageUtils {
         m.setForwardTopic(middlewareMessage.getForwardTopic());
         m.setForwardKey(middlewareMessage.getForwardKey());
 
-        // 使用Jackson序列化VerifyInfo
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            String verifyInfoJson = objectMapper.writeValueAsString(middlewareMessage.getVerifyInfo());
-            m.setVerifyInfo(verifyInfoJson);
-        } catch (Exception e) {
-            // 处理序列化异常，例如可以设置verifyInfo为null或者抛出一个运行时异常
-            m.setVerifyInfo(null);
-            // 或抛出自定义异常
-            // throw new RuntimeException("Error serializing VerifyInfo", e);
-        }
+        m.setVerifyInfo(verifyInfoJson);
+
+        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(0)));
+        m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
+        m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(0)));
 
         return m;
     }
@@ -62,5 +60,14 @@ public class MessageUtils {
         return 60 * (sendTryCount + 1);
     }
 
+
+    public static String GetHttpVerifyURL(int bizID, String messageKey, String url) {
+        StringBuffer sb = new StringBuffer(url);
+        sb.append("?bizID=");
+        sb.append(bizID);
+        sb.append("&messageKey=");
+        sb.append(messageKey);
+        return sb.toString();
+    }
 
 }
