@@ -14,16 +14,12 @@ public interface MessageMapper {
 
     Message findByMessageKeyAndBizID(Map<String, Object> params);
 
-    int updateMessageStatusByMessageKeyAndBizID(Map<String, Object> params);
-
-    int updateSendStatusByMessageKeyAndBizID(Map<String, Object> params);
-
-    int updateVerifyRetryCountAndTime(Map<String, Object> params);
-
-    int updateSendRetryCountAndTime(Map<String, Object> params);
-
     List<Message> findMessagesForVerify(Map<String, Object> params);
 
     List<Message> findMessagesForSend(Map<String, Object> params);
+
+    int updateSendInfo(Map<String, Object> params);
+
+    int updateVerifyInfo(Map<String, Object> params);
 
 }

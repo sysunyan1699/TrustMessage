@@ -1,6 +1,7 @@
 package com.example.trustmessage.middleware.utils;
 
 import com.example.trustmessage.middleware.service.impl.MessageServiceImpl;
+import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -13,13 +14,10 @@ public class JsonUtil {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static String toJson(Object data) throws JsonProcessingException {
-        try {
-            return mapper.writeValueAsString(data);
-        } catch (JsonProcessingException e) {
-            // 日志记录异常
-            logger.error("JSON serialization failed for data:{}, exception:{} ", data, e);
-            // 抛出自定义或具体异常
-            throw e;
-        }
+        return mapper.writeValueAsString(data);  // 直接抛出异常，让调用者处理
+    }
+
+    public static <T> T readValue(String jsonStr, Class<T> valueType) throws JsonProcessingException {
+        return mapper.readValue(jsonStr, valueType);  // 同样，直接抛出异常
     }
 }

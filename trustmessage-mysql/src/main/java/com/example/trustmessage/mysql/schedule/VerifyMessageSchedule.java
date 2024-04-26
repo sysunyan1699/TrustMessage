@@ -107,7 +107,7 @@ public class VerifyMessageSchedule {
                     messageService.updateVerifyRetryCountAndTime(
                             m.getMessageKey(),
                             m.getVerifyTryCount() + 1,
-                            LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(m.getVerifyTryCount())));
+                            LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(m.getVerifyTryCount()+1)));
                 }
                 break;
             case COMMIT:

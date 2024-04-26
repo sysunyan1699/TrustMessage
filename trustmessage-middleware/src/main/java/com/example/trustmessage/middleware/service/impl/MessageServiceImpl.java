@@ -30,13 +30,10 @@ public class MessageServiceImpl implements MessageService {
             return MessageResponseUtil.getMessageResponse(MessageCode.ILLEGAL_PARAM, false);
         }
 
-
         Message m = MessageUtils.MiddlewareMessageConvert2MessageStore(mm);
-        m.setVerifyTryCount(1);
-        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
 
+        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
         m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m.setSendTryCount(1);
         m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
         boolean result = innerMessageService.handlePrepareMessage(m);
         return MessageResponseUtil.getMessageResponse(MessageCode.SUCCESS, result);

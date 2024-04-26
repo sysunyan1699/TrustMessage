@@ -1,5 +1,6 @@
 package com.example.trustmessage.middleware.schedule;
 
+import com.example.trustmessage.middleware.utils.JsonUtil;
 import com.example.trustmessage.middlewareapi.common.MessageStatus;
 import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.example.trustmessage.middleware.mapper.MessageMapper;
@@ -44,24 +45,18 @@ public class VerifyMessageSchedule {
 
     @Value("${verify.selectLimitCount:100}")
     private int verifySelectLimitCount;
-
-    int corePoolSize = Runtime.getRuntime().availableProcessors() * 2; // 对IO密集型任务，可以增加核心线程数
-    int maximumPoolSize = corePoolSize * 2; // 最大线程数可以设置更大
-    long keepAliveTime = 60L; // 增加闲置超时时间，给予线程更多的等待时间，减少创建和销毁的开销
-    TimeUnit unit = TimeUnit.SECONDS;
-    BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(500); // 根据任务队列的实际情况调整
     ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            corePoolSize,
-            maximumPoolSize,
-            keepAliveTime,
-            unit,
-            workQueue,
-            new ThreadPoolExecutor.CallerRunsPolicy() // 饱和策略
+            16,
+            32,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(500),
+            new ThreadPoolExecutor.AbortPolicy()
     );
 
     @Scheduled(fixedRate = 60000)
     public void verifyScheduledTask() {
-        logger.info("Task executed at: {}", new java.util.Date());
+        logger.info("verifyScheduledTask executed at: {}", new java.util.Date());
         int minID = 0;
         while (true) {
             Map<String, Object> params = new HashMap<>();
@@ -69,6 +64,7 @@ public class VerifyMessageSchedule {
             params.put("limitCount", verifySelectLimitCount);
             List<Message> messageList = messageMapper.findMessagesForVerify(params);
             if (messageList.size() == 0) {
+                logger.info("verifyScheduledTask finish  at: {}", new java.util.Date());
                 return;
             }
             for (Message m : messageList) {
@@ -77,7 +73,7 @@ public class VerifyMessageSchedule {
                 //executor.execute(new VerifyMessage(m));
             }
             if (messageList.size() < verifySelectLimitCount) {
-                logger.info("Task finish  at: {}", new java.util.Date());
+                logger.info("verifyScheduledTask finish  at: {}", new java.util.Date());
                 return;
             }
         }
@@ -86,13 +82,20 @@ public class VerifyMessageSchedule {
 
 
     public void doVerify(Message m) {
-        if (m.getMessageStatus() != MessageStatus.PREPARE.getValue()) {
+        // 防止之前状态修改有遗漏
+        if (m.getVerifyTryCount() >= verifyMaxTryCount) {
+            logger.error("状态回查重试已达最大次数，bizID:{},messageKey:{},message:{}",
+                    m.getBizID(), m.getMessageKey(), m.getMessage());
+            messageService.updateMessageStatusByMessageKeyAndBizID(
+                    m.getBizID(),
+                    m.getMessageKey(),
+                    MessageStatus.PREPARE.getValue(),
+                    MessageStatus.VERIFY_FAIL.getValue()
+            );
             return;
         }
-        MiddlewareMessage.VerifyInfo verifyInfo;
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            verifyInfo = mapper.readValue(m.getVerifyInfo(), MiddlewareMessage.VerifyInfo.class);
+            MiddlewareMessage.VerifyInfo verifyInfo = JsonUtil.readValue(m.getVerifyInfo(), MiddlewareMessage.VerifyInfo.class);
             GenericVerifyService genericVerifyService = verifyServiceFactory.getVerifyService(verifyInfo.getProtocolType());
             int status = genericVerifyService.invoke(m.getBizID(), m.getMessageKey(), verifyInfo);
             // 根据结果，如果是prepare 则不需要处理状态只更新重试相关信息，如果是commit 或者rollback 更新状态和重试信息
@@ -106,36 +109,41 @@ public class VerifyMessageSchedule {
                         messageService.updateMessageStatusByMessageKeyAndBizID(
                                 m.getBizID(),
                                 m.getMessageKey(),
-                                MessageStatus.UNKNOWN.getValue(),
-                                MessageStatus.PREPARE.getValue());
+                                MessageStatus.PREPARE.getValue(),
+                                MessageStatus.VERIFY_FAIL.getValue()
+                        );
                     } else {
-                        int plusSeconds = MessageUtils.GetVerifyNextRetryTimeSeconds(m.getVerifyTryCount());
                         messageService.updateVerifyRetryCountAndTime(
                                 m.getBizID(),
                                 m.getMessageKey(),
+                                m.getMessageStatus(),
                                 m.getVerifyTryCount() + 1,
-                                LocalDateTime.now().plusSeconds(plusSeconds));
+                                LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(m.getVerifyTryCount() + 1)));
                     }
                     break;
                 case COMMIT:
                     // 直接修改状态, 等待消息发送定时任务将消息发送至下游
-                    messageService.updateMessageStatusByMessageKeyAndBizID(
+                    messageService.updateVerifyInfo(
                             m.getBizID(),
                             m.getMessageKey(),
-                            status,
-                            m.getMessageStatus());
+                            MessageStatus.PREPARE.getValue(),
+                            MessageStatus.COMMIT.getValue(),
+                            m.getVerifyTryCount() + 1,
+                            null);
 
                 case ROLLBACK:
                     // 直接修改状态
-                    messageService.updateMessageStatusByMessageKeyAndBizID(
+                    messageService.updateVerifyInfo(
                             m.getBizID(),
                             m.getMessageKey(),
-                            status,
-                            m.getMessageStatus());
+                            MessageStatus.PREPARE.getValue(),
+                            MessageStatus.ROLLBACK.getValue(),
+                            m.getVerifyTryCount() + 1,
+                            null);
                     break;
             }
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            logger.error("verifyScheduledTask doVerify error, message:{}, error:{}", m, e);
         }
     }
 

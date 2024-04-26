@@ -33,11 +33,7 @@ public class MessageMapperTest {
         m1.setBizID(1);
         m1.setForwardTopic("real topic");
         m1.setMessageStatus(1);
-        m1.setVerifyTryCount(1);
-        m1.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
         m1.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m1.setSendTryCount(1);
-        m1.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
 
         Message m2 = new Message();
         // Populate the message object with test data
@@ -46,10 +42,8 @@ public class MessageMapperTest {
         m2.setBizID(2);
         m2.setMessageStatus(1);
         m2.setForwardTopic("real topic");
-        m2.setVerifyTryCount(1);
         m2.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
         m2.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m2.setSendTryCount(1);
         m2.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
 
         Message m3 = new Message();
@@ -113,24 +107,6 @@ public class MessageMapperTest {
 
 
     @Test
-    public void updateMessageStatusByMessageKeyAndBizIDTest() {
-        //    void updateStatusByMessageKeyAndBizID(Map<String, Object> params);
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("bizID", 1);
-        params.put("messageKey", "key1");
-        params.put("messageStatus", 3);
-        params.put("originalMessageStatus", 1);
-
-        int result = messageMapper.updateMessageStatusByMessageKeyAndBizID(params);
-        assertEquals("updateStatusByMessageKeyAndBizIDTest", 1, result);
-
-        Message m = messageMapper.findByMessageKeyAndBizID(params);
-        assertEquals("findByMessageKeyAndBizID", 4, m.getId());
-        assertEquals("findByMessageKeyAndBizID", 3, m.getMessageStatus());
-    }
-
-    @Test
     public void findMessagesForVerifyTest() {
         Map<String, Object> params = new HashMap<>();
         params.put("id", 0);
@@ -143,65 +119,4 @@ public class MessageMapperTest {
         assertEquals("findMessagesForVerify", 2, result.size());
 
     }
-//
-//    protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
-//            throws BeanCreationException {
-//
-//        Object bean = instanceWrapper.getWrappedInstance();
-//
-//        boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
-//                isSingletonCurrentlyInCreation(beanName));
-//        if (earlySingletonExposure) {
-//            // add 方法后， 已经可以有了
-//            // 又遇到了ObjectFactory的匿名表达类实现， 通过getEarlyBeanReference的实现可知，说明singleFactories存储的是生成bean实例可以提前暴露的引用的逻辑
-//            addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
-//        }
-//
-//        // Initialize the bean instance.
-//        Object exposedObject = bean;
-//        try {
-//            populateBean(beanName, mbd, instanceWrapper);
-//            exposedObject = initializeBean(beanName, exposedObject, mbd);
-//        } catch (Throwable ex) {
-//            if (ex instanceof BeanCreationException && beanName.equals(((BeanCreationException) ex).getBeanName())) {
-//                throw (BeanCreationException) ex;
-//            }
-//            else {
-//                throw new BeanCreationException(
-//                        mbd.getResourceDescription(), beanName, "Initialization of bean failed", ex);
-//            }
-//        }
-//
-//
-//        //如果进行了早期单例曝光，检查是否有其他Bean已经通过早期引用获取了当前Bean的引用。
-//        //如果有，且当前Bean的实例在初始化过程中没有被替换，则将早期引用更新为初始化后的实例。如果Bean在初始化过程中被替换了，还需要检查是否存在循环依赖的问题。
-//        if (earlySingletonExposure) {
-//            Object earlySingletonReference = getSingleton(beanName, false);
-//            if (earlySingletonReference != null) {
-//                if (exposedObject == bean) {
-//                    exposedObject = earlySingletonReference;
-//                }
-//                else if (!this.allowRawInjectionDespiteWrapping && hasDependentBean(beanName)) {
-//                    String[] dependentBeans = getDependentBeans(beanName);
-//                    Set<String> actualDependentBeans = new LinkedHashSet<>(dependentBeans.length);
-//                    for (String dependentBean : dependentBeans) {
-//                        if (!removeSingletonIfCreatedForTypeCheckOnly(dependentBean)) {
-//                            actualDependentBeans.add(dependentBean);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Register bean as disposable.
-//        try {
-//            registerDisposableBeanIfNecessary(beanName, bean, mbd);
-//        }
-//        catch (BeanDefinitionValidationException ex) {
-//            throw new BeanCreationException(
-//                    mbd.getResourceDescription(), beanName, "Invalid destruction signature", ex);
-//        }
-//
-//        return exposedObject;
-//    }
 }

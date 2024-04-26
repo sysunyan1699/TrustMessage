@@ -7,7 +7,7 @@ public enum MessageStatus {
 
     ROLLBACK(3, "rollback"),
     //达到最大消息回查重试次数后消息中间件会设置的状态，业务方不要使用
-    UNKNOWN(4, "unknown");
+   VERIFY_FAIL(4, "verify fail");
 
     private int value;
 

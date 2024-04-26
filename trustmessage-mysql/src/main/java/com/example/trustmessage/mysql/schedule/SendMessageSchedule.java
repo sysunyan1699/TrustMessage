@@ -51,7 +51,7 @@ public class SendMessageSchedule {
 
     @Scheduled(fixedRate = 60000)
     public void sendMessageScheduledTask() {
-        logger.info("Task executed at:{} ", new java.util.Date());
+        logger.info("sendMessageScheduledTask executed at:{} ", new java.util.Date());
         int minID = 0;
         while (true) {
             Map<String, Object> params = new HashMap<>();
@@ -59,7 +59,7 @@ public class SendMessageSchedule {
             params.put("limitCount", sendSelectLimitCount);
             List<Message> messageList = messageMapper.findMessagesForSend(params);
             if (messageList.size() == 0) {
-                logger.info("Task end at:{} ", new java.util.Date());
+                logger.info("sendMessageScheduledTask finish at:{} ", new java.util.Date());
                 return;
             }
             for (Message m : messageList) {
@@ -68,7 +68,7 @@ public class SendMessageSchedule {
                 //executor.execute(new SendMessage(m));
             }
             if (messageList.size() < sendSelectLimitCount) {
-                logger.info("Task end at:{} ", new java.util.Date());
+                logger.info("sendMessageScheduledTask end at:{} ", new java.util.Date());
                 return;
             }
         }

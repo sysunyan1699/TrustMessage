@@ -14,38 +14,40 @@ public interface InnerMessageService {
 
     boolean updateMessageStatusByMessageKeyAndBizID(int bizID,
                                                     String messageKey,
-                                                    int messageStatus,
-                                                    int originalMessageStatus);
+                                                    int originalMessageStatus,
+                                                    int messageStatus);
 
 
     boolean updateSendStatusByMessageKeyAndBizID(int bizID,
                                                  String messageKey,
-                                                 int sendStatus,
-                                                 int originalSendStatus);
+                                                 int originalSendStatus,
+                                                 int sendStatus);
 
     boolean updateVerifyRetryCountAndTime(int bizID,
                                           String messageKey,
+                                          int originalSendStatus,
                                           int verifyTryCount,
                                           LocalDateTime verifyNextRetryTime);
 
 
     boolean updateSendRetryCountAndTime(int bizID,
                                         String messageKey,
+                                        int originalSendStatus,
                                         int sendTryCount,
                                         LocalDateTime sendNextRetryTime);
 
 
     boolean updateVerifyInfo(int bizID,
                              String messageKey,
-                             int messageStatus,
                              int originalMessageStatus,
+                             int messageStatus,
                              int verifyTryCount,
                              LocalDateTime verifyNextRetryTime);
 
     boolean updateSendInfo(int bizID,
                            String messageKey,
-                           int sendStatus,
                            int originalSendStatus,
+                           int sendStatus,
                            int sendTryCount,
                            LocalDateTime sendNextRetryTime
     );

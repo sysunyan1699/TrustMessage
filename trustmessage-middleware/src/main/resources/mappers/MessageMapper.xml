@@ -60,33 +60,6 @@
     </select>
 
 
-    <update id="updateMessageStatusByMessageKeyAndBizID" parameterType="map">
-        UPDATE message
-        SET message_status = #{messageStatus}
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND message_status = #{originalMessageStatus}
-    </update>
-
-
-    <update id="updateSendStatusByMessageKeyAndBizID" parameterType="map">
-        UPDATE message
-        SET send_status = #{sendStatus}
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND send_status = #{originalSendStatus}
-    </update>
-
-
-    <update id="updateVerifyRetryCountAndTime" parameterType="map">
-        UPDATE message
-        SET verify_try_count = #{verifyTryCount}, verify_next_retry_time = #{verifyNextRetryTime}
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID}
-    </update>
-
-
-    <update id="updateSendRetryCountAndTime" parameterType="map">
-        UPDATE message
-        SET send_try_count = #{sendTryCount}, send_next_retry_time = #{sendNextRetryTime}
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID}
-    </update>
-
     <update id="updateVerifyInfo" parameterType="map">
         UPDATE message
         <set>
@@ -96,12 +69,11 @@
             <if test="verifyTryCount != null">
                 verify_try_count = #{verifyTryCount},
             </if>
-
             <if test="verifyNextRetryTime != null">
                 verify_next_retry_time = #{verifyNextRetryTime}
             </if>
         </set>
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND message_status = #{originalVerifyStatus}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND message_status = #{originalMessageStatus}
     </update>
 
 
@@ -174,7 +146,7 @@
         WHERE
         id > #{id}
         AND CURRENT_TIMESTAMP >= send_next_retry_time
-        AND message_status = 2 and send_status = 1
+        AND message_status = 2 and send_status = 0
         LIMIT #{limitCount}
     </select>
 
