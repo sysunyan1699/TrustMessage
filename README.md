@@ -91,7 +91,7 @@ message_status INT COMMENT '消息状态 1-prepare 2-commit 3-rollback 4-unknown
 ```
 
 其状态流转如图所示
-![4.png](docs%2Fimage%2F4.png)
+![3.png](docs%2Fimage%2F3.png)
 ## 2.3 如果业务执行消息commit or rollback 失败怎么办-消息回查
 
 如流程图中所示，在2PC 阶段，拿到业务执行结果修改消息状态失败有可能是失败。
@@ -181,7 +181,7 @@ CREATE TABLE message (
 
 ## 3.1 业务流程
 
-![3.png](docs%2Fimage%2F3.png)
+![4.png](docs%2Fimage%2F4.png)
 
 ## 3.2 两阶段提交功能
 提供3个RPC 接口， prepare， commit, rollback, 接口底层封装对数据表的操作
