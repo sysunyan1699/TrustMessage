@@ -34,7 +34,7 @@ public class KafkaTrustMessageConsumer {
             return;
         }
 
-        if (!MessageUtils.MiddlewareMessageChecker(message)) {
+        if (!MessageUtils.middlewareMessageChecker(message)) {
             logger.error("MiddlewareMessageChecker fail, message:{}", message);
             //打印error 信息， 结束此次处理
             MessageStatus.PREPARE.getValue();
@@ -45,12 +45,12 @@ public class KafkaTrustMessageConsumer {
                 logger.info("Handling prepare message: {}", record.value());
                 Message m;
                 try {
-                    m = MessageUtils.MiddlewareMessageConvert2Message(message);
+                    m = MessageUtils.middlewareMessageConvert2Message(message);
                 } catch (JsonProcessingException e) {
                     logger.error("MiddlewareMessageConvert2MessageS to Message fail,MiddlewareMessage:{},e:{}", record.value(), e);
                     return;
                 }
-                m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(0)));
+                m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(0)));
                 innerMessageService.handlePrepareMessage(m);
                 break;
             case COMMIT:

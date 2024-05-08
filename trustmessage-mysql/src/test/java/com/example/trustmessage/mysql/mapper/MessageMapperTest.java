@@ -30,9 +30,9 @@ class MessageMapperTest {
         m1.setMessageStatus(MessageStatus.PREPARE.getValue());
 
         m1.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m1.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
+        m1.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(1)));
 
-        m1.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
+        m1.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getSendNextRetryTimeSeconds(1)));
 
         assertEquals(1, messageMapper.insertMessage(m1));
 
@@ -42,8 +42,8 @@ class MessageMapperTest {
         m2.setMessageStatus(MessageStatus.PREPARE.getValue());
 
         m2.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m2.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
-        m2.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
+        m2.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(1)));
+        m2.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getSendNextRetryTimeSeconds(1)));
 
         assertEquals(1, messageMapper.insertMessage(m2));
 
@@ -54,8 +54,8 @@ class MessageMapperTest {
         m3.setMessageStatus(MessageStatus.PREPARE.getValue());
 
         m3.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m3.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
-        m3.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
+        m3.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(1)));
+        m3.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getSendNextRetryTimeSeconds(1)));
 
         assertEquals(1, messageMapper.insertMessage(m3));
     }
@@ -70,13 +70,19 @@ class MessageMapperTest {
 
     @Test
     void findMessagesForVerify() {
+        Map<String, Object> params = new HashMap<>();
+        long minId = 0;
+        params.put("id", 0);
+        params.put("limitCount", 100);
+        List<Message> messageList = messageMapper.findMessagesForVerify(params);
+        assertEquals(3, messageList.size());
     }
 
     @Test
     void findMessagesForSend() {
         Map<String, Object> params = new HashMap<>();
-
-        params.put("id", 0);
+        long minId = 1;
+        params.put("id", minId);
         params.put("limitCount", 100);
         List<Message> messageList = messageMapper.findMessagesForSend(params);
         assertEquals(1, messageList.size());

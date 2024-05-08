@@ -25,9 +25,9 @@ class MessageServiceImplTest {
         m.setMessage("message4");
         m.setMessageKey("key4");
         m.setMessageStatus(MessageStatus.PREPARE.getValue());
-        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(1)));
+        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(1)));
         m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(1)));
+        m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getSendNextRetryTimeSeconds(1)));
         assertEquals(true, messageService.prepareMessage(m));
     }
 
@@ -53,6 +53,7 @@ class MessageServiceImplTest {
     void updateVerifyRetryCountAndTime() {
 
         assertTrue(messageService.updateVerifyRetryCountAndTime("key1",
+                1,
                 2,
                 LocalDateTime.now().plusSeconds(600)));
     }
@@ -65,6 +66,7 @@ class MessageServiceImplTest {
     @Test
     void updateSendRetryCountAndTime() {
         assertTrue(messageService.updateSendRetryCountAndTime("key1",
+                0,
                 3,
                 LocalDateTime.now().plusSeconds(600)));
 

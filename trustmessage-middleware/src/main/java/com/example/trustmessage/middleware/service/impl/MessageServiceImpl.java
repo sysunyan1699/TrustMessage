@@ -27,13 +27,13 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public MessageResponse prepareMessage(MiddlewareMessage mm) {
-        if (MessageUtils.MiddlewareMessageChecker(mm)) {
+        if (MessageUtils.middlewareMessageChecker(mm)) {
             return MessageResponseUtil.getMessageResponse(MessageCode.ILLEGAL_PARAM, false);
         }
 
         Message m;
         try {
-            m = MessageUtils.MiddlewareMessageConvert2Message(mm);
+            m = MessageUtils.middlewareMessageConvert2Message(mm);
         } catch (JsonProcessingException e) {
             logger.error("prepareMessage MiddlewareMessageConvert2Message MiddlewareMessage:{},error:{}", mm, e);
             return MessageResponseUtil.getMessageResponse(MessageCode.ILLEGAL_PARAM, false);

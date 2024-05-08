@@ -29,7 +29,7 @@ public class HTTPVerifyServiceImpl implements GenericVerifyService {
     @Override
     public int invoke(int bizID, String messageKey, MiddlewareMessage.VerifyInfo verifyInfo) {
         // 构造请求的URL
-        String url = MessageUtils.GetHttpVerifyURL(bizID, messageKey, verifyInfo.getUrl());
+        String url = MessageUtils.getHttpVerifyURL(bizID, messageKey, verifyInfo.getUrl());
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<HTTPVerifyResponse> response = restTemplate.getForEntity(url, HTTPVerifyResponse.class);
 

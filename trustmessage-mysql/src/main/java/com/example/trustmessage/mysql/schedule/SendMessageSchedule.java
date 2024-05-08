@@ -52,7 +52,7 @@ public class SendMessageSchedule {
     @Scheduled(fixedRate = 60000)
     public void sendMessageScheduledTask() {
         logger.info("sendMessageScheduledTask executed at:{} ", new java.util.Date());
-        int minID = 0;
+        long  minID = 0;
         while (true) {
             Map<String, Object> params = new HashMap<>();
             params.put("id", minID);
@@ -111,10 +111,11 @@ public class SendMessageSchedule {
                         m.getSendTryCount() + 1,
                         null);
             } else {
-                int plusSeconds = MessageUtils.GetSendNextRetryTimeSeconds(m.getSendTryCount());
+                int plusSeconds = MessageUtils.getSendNextRetryTimeSeconds(m.getSendTryCount());
 
                 // 更新重试信息
                 messageService.updateSendRetryCountAndTime(m.getMessageKey(),
+                        MessageSendStatus.NOT_SEND.getValue(),
                         m.getSendTryCount() + 1,
                         LocalDateTime.now().plusSeconds(plusSeconds));
             }

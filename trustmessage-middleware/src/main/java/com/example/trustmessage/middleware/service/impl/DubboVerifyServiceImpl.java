@@ -4,6 +4,7 @@ import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.example.trustmessage.middleware.service.GenericVerifyService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;

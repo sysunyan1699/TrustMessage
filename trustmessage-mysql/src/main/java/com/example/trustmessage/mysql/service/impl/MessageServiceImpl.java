@@ -51,10 +51,12 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public boolean updateVerifyRetryCountAndTime(String messageKey,
+                                                 int originalMessageStatus,
                                                  int verifyTryCount,
                                                  LocalDateTime verifyNextRetryTime) {
         Map<String, Object> params = new HashMap<>();
         params.put("messageKey", messageKey);
+        params.put("originalMessageStatus", originalMessageStatus);
         params.put("verifyTryCount", verifyTryCount);
         params.put("verifyNextRetryTime", verifyNextRetryTime);
         return doUpdateVerifyInfo(params);
@@ -95,10 +97,12 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public boolean updateSendRetryCountAndTime(String messageKey,
+                                               int originalSendStatus,
                                                int sendTryCount,
                                                LocalDateTime sendNextRetryTime) {
         Map<String, Object> params = new HashMap<>();
         params.put("messageKey", messageKey);
+        params.put("originalSendStatus", originalSendStatus);
         params.put("sendTryCount", sendTryCount);
         params.put("sendNextRetryTime", sendNextRetryTime);
         return doUpdateSendInfo(params);

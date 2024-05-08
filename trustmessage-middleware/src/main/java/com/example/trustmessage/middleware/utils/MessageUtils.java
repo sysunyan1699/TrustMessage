@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 public class MessageUtils {
 
-    public static boolean MiddlewareMessageChecker(MiddlewareMessage m) {
+    public static boolean middlewareMessageChecker(MiddlewareMessage m) {
 
         if (m == null) {
             return false;
@@ -30,7 +30,7 @@ public class MessageUtils {
         return true;
     }
 
-    public static Message MiddlewareMessageConvert2Message(MiddlewareMessage middlewareMessage) throws JsonProcessingException {
+    public static Message middlewareMessageConvert2Message(MiddlewareMessage middlewareMessage) throws JsonProcessingException {
 
         String verifyInfoJson = JsonUtil.toJson(middlewareMessage.getVerifyInfo());
 
@@ -44,24 +44,24 @@ public class MessageUtils {
 
         m.setVerifyInfo(verifyInfoJson);
 
-        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(0)));
+        m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(0)));
         m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
-        m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.GetSendNextRetryTimeSeconds(0)));
+        m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getSendNextRetryTimeSeconds(0)));
 
         return m;
     }
 
     // 可以是其他的重试时间策略
-    public static int GetVerifyNextRetryTimeSeconds(int verifyTryCount) {
+    public static int getVerifyNextRetryTimeSeconds(int verifyTryCount) {
         return 60 * (verifyTryCount + 1);
     }
 
-    public static int GetSendNextRetryTimeSeconds(int sendTryCount) {
+    public static int getSendNextRetryTimeSeconds(int sendTryCount) {
         return 60 * (sendTryCount + 1);
     }
 
 
-    public static String GetHttpVerifyURL(int bizID, String messageKey, String url) {
+    public static String getHttpVerifyURL(int bizID, String messageKey, String url) {
         StringBuffer sb = new StringBuffer(url);
         sb.append("?bizID=");
         sb.append(bizID);

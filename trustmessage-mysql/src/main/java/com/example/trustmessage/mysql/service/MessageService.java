@@ -21,6 +21,7 @@ public interface MessageService {
 
     boolean updateVerifyRetryCountAndTime(String messageKey,
                                           int verifyTryCount,
+                                          int originalMessageStatus,
                                           LocalDateTime verifyNextRetryTime);
 
     boolean updateVerifyInfo(String messageKey,
@@ -30,6 +31,7 @@ public interface MessageService {
                              LocalDateTime verifyNextRetryTime);
 
     boolean updateSendRetryCountAndTime(String messageKey,
+                                        int originalSendStatus,
                                         int sendTryCount,
                                         LocalDateTime sendNextRetryTime);
 

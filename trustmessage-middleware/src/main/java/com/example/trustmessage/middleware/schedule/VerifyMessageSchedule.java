@@ -57,7 +57,7 @@ public class VerifyMessageSchedule {
     @Scheduled(fixedRate = 60000)
     public void verifyScheduledTask() {
         logger.info("verifyScheduledTask executed at: {}", new java.util.Date());
-        int minID = 0;
+        long minID = 0;
         while (true) {
             Map<String, Object> params = new HashMap<>();
             params.put("id", minID);
@@ -118,7 +118,7 @@ public class VerifyMessageSchedule {
                                 m.getMessageKey(),
                                 m.getMessageStatus(),
                                 m.getVerifyTryCount() + 1,
-                                LocalDateTime.now().plusSeconds(MessageUtils.GetVerifyNextRetryTimeSeconds(m.getVerifyTryCount() + 1)));
+                                LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(m.getVerifyTryCount() + 1)));
                     }
                     break;
                 case COMMIT:
