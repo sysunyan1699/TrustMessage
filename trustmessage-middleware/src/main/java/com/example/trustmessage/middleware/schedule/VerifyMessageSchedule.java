@@ -1,16 +1,15 @@
 package com.example.trustmessage.middleware.schedule;
 
-import com.example.trustmessage.middleware.utils.JsonUtil;
-import com.example.trustmessage.middlewareapi.common.MessageStatus;
-import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.example.trustmessage.middleware.mapper.MessageMapper;
 import com.example.trustmessage.middleware.model.Message;
 import com.example.trustmessage.middleware.service.GenericVerifyService;
 import com.example.trustmessage.middleware.service.InnerMessageService;
 import com.example.trustmessage.middleware.service.VerifyServiceFactory;
+import com.example.trustmessage.middleware.utils.JsonUtil;
 import com.example.trustmessage.middleware.utils.MessageUtils;
+import com.example.trustmessage.middlewareapi.common.MessageStatus;
+import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @EnableScheduling
 @Component
@@ -31,8 +32,6 @@ public class VerifyMessageSchedule {
 
     private static final Logger logger = LoggerFactory.getLogger(VerifyMessageSchedule.class);
 
-    @Autowired
-    private MessageMapper messageMapper;
     @Autowired
     private VerifyServiceFactory verifyServiceFactory;
 
@@ -59,10 +58,7 @@ public class VerifyMessageSchedule {
         logger.info("verifyScheduledTask executed at: {}", new java.util.Date());
         long minID = 0;
         while (true) {
-            Map<String, Object> params = new HashMap<>();
-            params.put("id", minID);
-            params.put("limitCount", verifySelectLimitCount);
-            List<Message> messageList = messageMapper.findMessagesForVerify(params);
+            List<Message> messageList = messageService.findMessagesForVerify(minID, verifySelectLimitCount);
             if (messageList.size() == 0) {
                 logger.info("verifyScheduledTask finish  at: {}", new java.util.Date());
                 return;
@@ -89,8 +85,8 @@ public class VerifyMessageSchedule {
             messageService.updateMessageStatusByMessageKeyAndBizID(
                     m.getBizID(),
                     m.getMessageKey(),
-                    MessageStatus.PREPARE.getValue(),
-                    MessageStatus.VERIFY_FAIL.getValue()
+                    MessageStatus.VERIFY_FAIL.getValue(),
+                    m.getVersion()
             );
             return;
         }
@@ -109,16 +105,17 @@ public class VerifyMessageSchedule {
                         messageService.updateMessageStatusByMessageKeyAndBizID(
                                 m.getBizID(),
                                 m.getMessageKey(),
-                                MessageStatus.PREPARE.getValue(),
-                                MessageStatus.VERIFY_FAIL.getValue()
+                                MessageStatus.VERIFY_FAIL.getValue(),
+                                m.getVersion()
                         );
                     } else {
                         messageService.updateVerifyRetryCountAndTime(
                                 m.getBizID(),
                                 m.getMessageKey(),
-                                m.getMessageStatus(),
                                 m.getVerifyTryCount() + 1,
-                                LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(m.getVerifyTryCount() + 1)));
+                                LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(m.getVerifyTryCount() + 1)),
+                                m.getVersion()
+                        );
                     }
                     break;
                 case COMMIT:
@@ -126,20 +123,20 @@ public class VerifyMessageSchedule {
                     messageService.updateVerifyInfo(
                             m.getBizID(),
                             m.getMessageKey(),
-                            MessageStatus.PREPARE.getValue(),
                             MessageStatus.COMMIT.getValue(),
                             m.getVerifyTryCount() + 1,
-                            null);
+                            null,
+                            m.getVersion());
 
                 case ROLLBACK:
                     // 直接修改状态
                     messageService.updateVerifyInfo(
                             m.getBizID(),
                             m.getMessageKey(),
-                            MessageStatus.PREPARE.getValue(),
                             MessageStatus.ROLLBACK.getValue(),
                             m.getVerifyTryCount() + 1,
-                            null);
+                            null,
+                            m.getVersion());
                     break;
             }
         } catch (JsonProcessingException e) {

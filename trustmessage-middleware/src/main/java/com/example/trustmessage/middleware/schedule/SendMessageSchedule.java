@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 public class SendMessageSchedule {
     private static final Logger logger = LoggerFactory.getLogger(SendMessageSchedule.class);
 
-    @Autowired
-    private MessageMapper messageMapper;
 
     @Autowired
     private InnerMessageService innerMessageService;
@@ -52,10 +50,7 @@ public class SendMessageSchedule {
         logger.info("verifyMessageScheduledTask executed at:{} ", new java.util.Date());
         long minID = 0;
         while (true) {
-            Map<String, Object> params = new HashMap<>();
-            params.put("id", minID);
-            params.put("limitCount", sendSelectLimitCount);
-            List<Message> messageList = messageMapper.findMessagesForSend(params);
+            List<Message> messageList = innerMessageService.findMessagesForSend(minID, sendSelectLimitCount);
             if (messageList.size() == 0) {
                 logger.info("verifyMessageScheduledTask at:{} ", new java.util.Date());
                 return;
@@ -80,8 +75,8 @@ public class SendMessageSchedule {
                     m.getBizID(), m.getMessageKey(), m.getMessage());
             innerMessageService.updateSendStatusByMessageKeyAndBizID(m.getBizID(),
                     m.getMessageKey(),
-                    MessageSendStatus.NOT_SEND.getValue(),
-                    MessageSendStatus.SEND_FAIL.getValue()
+                    MessageSendStatus.SEND_FAIL.getValue(),
+                    m.getVersion()
             );
         }
         //调用kafka 发送消息, 根据消息发送结果进行业务处理
@@ -92,10 +87,10 @@ public class SendMessageSchedule {
             innerMessageService.updateSendInfo(
                     m.getBizID(),
                     m.getMessageKey(),
-                    MessageSendStatus.NOT_SEND.getValue(),
                     MessageSendStatus.SEND_SUCCESS.getValue(),
                     m.getSendTryCount() + 1,
-                    null);
+                    null,
+                    m.getVersion());
 
         } else {
 
@@ -108,10 +103,10 @@ public class SendMessageSchedule {
                 innerMessageService.updateSendInfo(
                         m.getBizID(),
                         m.getMessageKey(),
-                        MessageSendStatus.NOT_SEND.getValue(),
                         MessageSendStatus.SEND_FAIL.getValue(),
                         m.getSendTryCount() + 1,
-                        null);
+                        null,
+                        m.getVersion());
             } else {
                 int plusSeconds = MessageUtils.getSendNextRetryTimeSeconds(m.getSendTryCount());
 
@@ -119,9 +114,9 @@ public class SendMessageSchedule {
                 innerMessageService.updateSendRetryCountAndTime(
                         m.getBizID(),
                         m.getMessageKey(),
-                        m.getMessageStatus(),
                         m.getSendTryCount() + 1,
-                        LocalDateTime.now().plusSeconds(plusSeconds));
+                        LocalDateTime.now().plusSeconds(plusSeconds),
+                        m.getVersion());
             }
 
         }

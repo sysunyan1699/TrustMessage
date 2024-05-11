@@ -1,5 +1,7 @@
 package com.example.trustmessage.middleware.mq;
 
+import com.example.trustmessage.middleware.common.MessageCode;
+import com.example.trustmessage.middleware.utils.MessageResponseUtil;
 import com.example.trustmessage.middlewareapi.common.MessageStatus;
 import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
 import com.example.trustmessage.middleware.model.Message;
@@ -55,11 +57,39 @@ public class KafkaTrustMessageConsumer {
                 break;
             case COMMIT:
                 logger.info("Handling commit message: {}", record.value());
-                innerMessageService.handleCommitMessage(message.getBizID(), message.getMessageKey());
+                Message m2= innerMessageService.selectByBizIDAndMessageKey(message.getBizID(), message.getMessageKey());
+                if (m2 == null) {
+                    logger.info("Handling commit， 消息不存在， message: {}", record.value());
+                    return;
+                }
+                if (m2.getMessageStatus() == MessageStatus.COMMIT.getValue()) {
+                    logger.info("Handling commit, 重复消息，已commit, message: {}", record.value());
+                    return;
+                }
+
+                if (m2.getMessageStatus() == MessageStatus.ROLLBACK.getValue()) {
+                    logger.info("Handling commit , 该消息已回滚，无法commit, message: {}", record.value());
+                    return;
+                }
+                innerMessageService.handleCommitMessage(m2.getBizID(), m2.getMessageKey(),m2.getVersion());
                 break;
             case ROLLBACK:
                 logger.info("Handling rollback message: {}", record.value());
-                innerMessageService.handleRollbackMessage(message.getBizID(), message.getMessageKey());
+                Message m3= innerMessageService.selectByBizIDAndMessageKey(message.getBizID(), message.getMessageKey());
+                if (m3 == null) {
+                    logger.info("Handling commit， 消息不存在， message: {}", record.value());
+                    return;
+                }
+                if (m3.getMessageStatus() == MessageStatus.ROLLBACK.getValue()) {
+                    logger.info("Handling commit, 重复消息，已回滚, message: {}", record.value());
+                    return;
+                }
+
+                if (m3.getMessageStatus() == MessageStatus.COMMIT.getValue()) {
+                    logger.info("Handling commit , 该消息已commit，无法回滚, message: {}", record.value());
+                    return;
+                }
+                innerMessageService.handleCommitMessage(m3.getBizID(), m3.getMessageKey(),m3.getVersion());
                 break;
             default:
                 logger.error("Unknown message type: {}", record.value());

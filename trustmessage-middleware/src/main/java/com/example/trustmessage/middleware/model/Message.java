@@ -38,6 +38,8 @@ public class Message {
     // 下一次消息尝试发送的时间
     private LocalDateTime sendNextRetryTime;
 
+    private int version;
+
 
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
@@ -155,6 +157,14 @@ public class Message {
         this.createTime = createTime;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
     public LocalDateTime getUpdateTime() {
         return updateTime;
     }
@@ -179,22 +189,22 @@ public class Message {
                 ", sendStatus=" + sendStatus +
                 ", sendTryCount=" + sendTryCount +
                 ", sendNextRetryTime=" + sendNextRetryTime +
+                ", version=" + version +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 '}';
     }
-
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Message message1 = (Message) o;
-        return id == message1.id && bizID == message1.bizID && messageStatus == message1.messageStatus && verifyTryCount == message1.verifyTryCount && sendStatus == message1.sendStatus && sendTryCount == message1.sendTryCount && Objects.equals(message, message1.message) && Objects.equals(messageKey, message1.messageKey) && Objects.equals(forwardTopic, message1.forwardTopic) && Objects.equals(forwardKey, message1.forwardKey) && Objects.equals(verifyInfo, message1.verifyInfo) && Objects.equals(verifyNextRetryTime, message1.verifyNextRetryTime) && Objects.equals(sendNextRetryTime, message1.sendNextRetryTime) && Objects.equals(createTime, message1.createTime) && Objects.equals(updateTime, message1.updateTime);
+        return id == message1.id && bizID == message1.bizID && messageStatus == message1.messageStatus && verifyTryCount == message1.verifyTryCount && sendStatus == message1.sendStatus && sendTryCount == message1.sendTryCount && version == message1.version && Objects.equals(message, message1.message) && Objects.equals(messageKey, message1.messageKey) && Objects.equals(forwardTopic, message1.forwardTopic) && Objects.equals(forwardKey, message1.forwardKey) && Objects.equals(verifyInfo, message1.verifyInfo) && Objects.equals(verifyNextRetryTime, message1.verifyNextRetryTime) && Objects.equals(sendNextRetryTime, message1.sendNextRetryTime) && Objects.equals(createTime, message1.createTime) && Objects.equals(updateTime, message1.updateTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, bizID, message, messageKey, messageStatus, forwardTopic, forwardKey, verifyInfo, verifyTryCount, verifyNextRetryTime, sendStatus, sendTryCount, sendNextRetryTime, createTime, updateTime);
+        return Objects.hash(id, bizID, message, messageKey, messageStatus, forwardTopic, forwardKey, verifyInfo, verifyTryCount, verifyNextRetryTime, sendStatus, sendTryCount, sendNextRetryTime, version, createTime, updateTime);
     }
 }

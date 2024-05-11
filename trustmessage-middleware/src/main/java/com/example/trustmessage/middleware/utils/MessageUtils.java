@@ -1,5 +1,6 @@
 package com.example.trustmessage.middleware.utils;
 
+import com.example.trustmessage.middleware.common.Constants;
 import com.example.trustmessage.middleware.common.MessageSendStatus;
 import com.example.trustmessage.middleware.model.Message;
 import com.example.trustmessage.middlewareapi.common.MiddlewareMessage;
@@ -47,6 +48,7 @@ public class MessageUtils {
         m.setVerifyNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getVerifyNextRetryTimeSeconds(0)));
         m.setSendStatus(MessageSendStatus.NOT_SEND.getValue());
         m.setSendNextRetryTime(LocalDateTime.now().plusSeconds(MessageUtils.getSendNextRetryTimeSeconds(0)));
+        m.setVersion(Constants.DEFAULT_MESSAGE_VERSION);
 
         return m;
     }

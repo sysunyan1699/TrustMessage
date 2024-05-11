@@ -12,6 +12,7 @@ CREATE TABLE message (
 	send_status INT DEFAULT 0 COMMENT '0-投递中 1-投递成功 2-投递失败',
 	send_try_count INT DEFAULT 0 COMMENT 'commit消息发送 当前重试次数',
 	send_next_retry_time DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息发送 下次重试时间',
+	version INT NOT NULL DEFAULT 0 COMMENT '数据版本号，用作乐观锁控制',
 	create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id),

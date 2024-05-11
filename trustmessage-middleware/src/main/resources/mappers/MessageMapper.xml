@@ -18,7 +18,8 @@
         verify_next_retry_time,
         send_status,
         send_try_count,
-        send_next_retry_time
+        send_next_retry_time,
+        version
         ) VALUES (
         #{message},
         #{bizID},
@@ -31,7 +32,8 @@
         #{verifyNextRetryTime},
         #{sendStatus},
         #{sendTryCount},
-        #{sendNextRetryTime}
+        #{sendNextRetryTime},
+        #{version}
         )
     </insert>
 
@@ -50,6 +52,7 @@
         send_status AS "sendStatus",
         send_try_count AS "sendTryCount",
         send_next_retry_time AS "sendNextRetryTime",
+        version AS "version",
         create_time AS "createTime",
         update_time AS "updateTime"
         FROM
@@ -63,6 +66,7 @@
     <update id="updateVerifyInfo" parameterType="map">
         UPDATE message
         <set>
+            version = version + 1,
             <if test="messageStatus!= null">
                 message_status = #{messageStatus},
             </if>
@@ -73,14 +77,15 @@
                 verify_next_retry_time = #{verifyNextRetryTime}
             </if>
         </set>
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND message_status = #{originalMessageStatus}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND version = #{version}
     </update>
 
 
     <update id="updateSendInfo" parameterType="map">
         UPDATE message
         <set>
-            <if test="sendStatus!= null">
+            version = #{version} + 1 ,
+            <if test="sendStatus != null">
                 send_status = #{sendStatus},
             </if>
             <if test="sendTryCount != null">
@@ -90,7 +95,7 @@
                 send_next_retry_time = #{sendNextRetryTime}
             </if>
         </set>
-        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND send_status = #{originalSendStatus}
+        WHERE message_key = #{messageKey} AND biz_id = #{bizID} AND version = #{version}
     </update>
 
 
@@ -110,6 +115,7 @@
         send_status AS "sendStatus",
         send_try_count AS "sendTryCount",
         send_next_retry_time AS "sendNextRetryTime",
+        version AS "version",
         create_time AS "createTime",
         update_time AS "updateTime"
         FROM
@@ -137,6 +143,7 @@
         send_status AS "sendStatus",
         send_try_count AS "sendTryCount",
         send_next_retry_time AS "sendNextRetryTime",
+        version AS "version",
         create_time AS "createTime",
         update_time AS "updateTime"
         FROM

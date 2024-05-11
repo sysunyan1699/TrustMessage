@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -17,41 +18,70 @@ public class InnerMessageServiceImpl implements InnerMessageService {
     private MessageMapper messageMapper;
 
     @Override
+    public Message selectByBizIDAndMessageKey(int bizID, String messageKey) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("bizID", bizID);
+        params.put("messageKey", messageKey);
+        return messageMapper.findByMessageKeyAndBizID(params);
+    }
+
+    @Override
+    public List<Message> findMessagesForVerify(long minID, int limit) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", minID);
+        params.put("limitCount", limit);
+        return messageMapper.findMessagesForVerify(params);
+    }
+
+    @Override
+    public List<Message> findMessagesForSend(long minID, int limit) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", minID);
+        params.put("limitCount", limit);
+        return messageMapper.findMessagesForSend(params);
+    }
+
+
+    @Override
     public boolean handlePrepareMessage(Message message) {
         return messageMapper.insertMessage(message) == 1;
     }
 
     @Override
-    public boolean handleCommitMessage(int bizID, String messageKey) {
+    public boolean handleCommitMessage(int bizID,
+                                       String messageKey,
+                                       int version) {
 
         return updateMessageStatusByMessageKeyAndBizID(
                 bizID,
                 messageKey,
-                MessageStatus.PREPARE.getValue(),
-                MessageStatus.COMMIT.getValue()
+                MessageStatus.COMMIT.getValue(),
+                version
         );
     }
 
     @Override
-    public boolean handleRollbackMessage(int bizID, String messageKey) {
+    public boolean handleRollbackMessage(int bizID,
+                                         String messageKey,
+                                         int version) {
         return updateMessageStatusByMessageKeyAndBizID(
                 bizID,
                 messageKey,
-                MessageStatus.PREPARE.getValue(),
-                MessageStatus.ROLLBACK.getValue());
+                MessageStatus.ROLLBACK.getValue(),
+                version);
     }
 
     @Override
     public boolean updateMessageStatusByMessageKeyAndBizID(int bizID,
                                                            String messageKey,
-                                                           int originalMessageStatus,
-                                                           int messageStatus
+                                                           int messageStatus,
+                                                           int version
     ) {
         Map<String, Object> params = new HashMap<>();
         params.put("bizID", bizID);
         params.put("messageKey", messageKey);
-        params.put("originalMessageStatus", originalMessageStatus);
         params.put("messageStatus", messageStatus);
+        params.put("version", version);
         return doUpdateVerifyInfo(params);
     }
 
@@ -59,44 +89,45 @@ public class InnerMessageServiceImpl implements InnerMessageService {
     @Override
     public boolean updateSendStatusByMessageKeyAndBizID(int bizID,
                                                         String messageKey,
-                                                        int originalSendStatus,
-                                                        int sendStatus
+                                                        int sendStatus,
+                                                        int version
     ) {
         Map<String, Object> params = new HashMap<>();
         params.put("bizID", bizID);
         params.put("messageKey", messageKey);
-        params.put("originalSendStatus", originalSendStatus);
         params.put("sendStatus", sendStatus);
+        params.put("version", version);
+
         return doUpdateSendInfo(params);
     }
 
     @Override
     public boolean updateVerifyRetryCountAndTime(int bizID,
                                                  String messageKey,
-                                                 int originalMessageStatus,
                                                  int verifyTryCount,
-                                                 LocalDateTime verifyNextRetryTime) {
+                                                 LocalDateTime verifyNextRetryTime,
+                                                 int version) {
         Map<String, Object> params = new HashMap<>();
         params.put("bizID", bizID);
         params.put("messageKey", messageKey);
-        params.put("originalMessageStatus", originalMessageStatus);
         params.put("verifyTryCount", verifyTryCount);
         params.put("verifyNextRetryTime", verifyNextRetryTime);
+        params.put("version", version);
         return doUpdateVerifyInfo(params);
     }
 
     @Override
     public boolean updateSendRetryCountAndTime(int bizID,
                                                String messageKey,
-                                               int originalSendStatus,
                                                int sendTryCount,
-                                               LocalDateTime sendNextRetryTime) {
+                                               LocalDateTime sendNextRetryTime,
+                                               int version) {
         Map<String, Object> params = new HashMap<>();
         params.put("bizID", bizID);
         params.put("messageKey", messageKey);
-        params.put("originalSendStatus", originalSendStatus);
         params.put("sendTryCount", sendTryCount);
         params.put("sendNextRetryTime", sendNextRetryTime);
+        params.put("version", version);
 
         return doUpdateSendInfo(params);
     }
@@ -105,33 +136,34 @@ public class InnerMessageServiceImpl implements InnerMessageService {
     @Override
     public boolean updateVerifyInfo(int bizID,
                                     String messageKey,
-                                    int originalMessageStatus,
                                     int messageStatus,
                                     int verifyTryCount,
-                                    LocalDateTime verifyNextRetryTime) {
+                                    LocalDateTime verifyNextRetryTime,
+                                    int version) {
         Map<String, Object> params = new HashMap<>();
         params.put("bizID", bizID);
         params.put("messageKey", messageKey);
-        params.put("originalMessageStatus", originalMessageStatus);
         params.put("verifyTryCount", verifyTryCount);
         params.put("verifyNextRetryTime", verifyNextRetryTime);
+        params.put("version", version);
+
         return doUpdateVerifyInfo(params);
     }
 
     @Override
     public boolean updateSendInfo(int bizID,
                                   String messageKey,
-                                  int originalSendStatus,
                                   int sendStatus,
                                   int sendTryCount,
-                                  LocalDateTime sendNextRetryTime) {
+                                  LocalDateTime sendNextRetryTime,
+                                  int version) {
         Map<String, Object> params = new HashMap<>();
         params.put("bizID", bizID);
         params.put("messageKey", messageKey);
-        params.put("originalSendStatus", originalSendStatus);
         params.put("sendStatus", sendStatus);
         params.put("sendTryCount", sendTryCount);
         params.put("sendNextRetryTime", sendNextRetryTime);
+        params.put("version", version);
         return doUpdateSendInfo(params);
     }
 
